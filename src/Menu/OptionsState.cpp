@@ -85,14 +85,19 @@ OptionsState::OptionsState(Game *game, OptionsOrigin origin) : OptionsBaseState(
 	_txtSoundVolume = new Text(140, 9, 174, 72);
 	_slrSoundVolume = new Slider(118, 20, 174, 82);
 
+	/* TODO: add current mode */
+
 	/* Get available fullscreen modes */
-	_res = SDL_ListModes(NULL, SDL_FULLSCREEN);
-	if (_res > (SDL_Rect**)0)
+	_res.resize(SDL_GetNumDisplayModes(0));
+	for (int i = 0; i < _res.size(); ++i)
+		SDL_GetDisplayMode(0, i, &_res[i]);
+	_resCurrent = -1;
+	if (_res.size() != 0)
 	{
+#if 0
 		int i;
 		int width = Options::getInt("displayWidth");
 		int height = Options::getInt("displayHeight");
-		_resCurrent = -1;
 		for (i = 0; _res[i]; ++i)
 		{
 			if (_resCurrent == -1 && ((_res[i]->w == width && _res[i]->h <= height) || _res[i]->w < width))
@@ -100,12 +105,10 @@ OptionsState::OptionsState(Game *game, OptionsOrigin origin) : OptionsBaseState(
 				_resCurrent = i;
 			}
 		}
-		_resAmount = i;
+#endif
 	}
 	else
 	{
-		_resCurrent = -1;
-		_resAmount = 0;
 		_btnDisplayDown->setVisible(false);
 		_btnDisplayUp->setVisible(false);
 		Log(LOG_WARNING) << "Couldn't get display resolutions";
@@ -159,12 +162,12 @@ OptionsState::OptionsState(Game *game, OptionsOrigin origin) : OptionsBaseState(
 	_btnOk->setColor(Palette::blockOffset(8)+5);
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&OptionsState::btnOkClick);
-	//_btnOk->onKeyboardPress((ActionHandler)&OptionsState::btnOkClick, (SDLKey)Options::getInt("keyOk"));
+	//_btnOk->onKeyboardPress((ActionHandler)&OptionsState::btnOkClick, (SDL_Keycode)Options::getInt("keyOk"));
 
 	_btnCancel->setColor(Palette::blockOffset(8)+5);
 	_btnCancel->setText(tr("STR_CANCEL"));
 	_btnCancel->onMouseClick((ActionHandler)&OptionsState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler)&OptionsState::btnCancelClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler)&OptionsState::btnCancelClick, (SDL_Keycode)Options::getInt("keyCancel"));
 
 	_btnDefault->setColor(Palette::blockOffset(8)+5);
 	//_btnDefault->setText(tr("STR_RESTORE_DEFAULTS"));
@@ -429,19 +432,19 @@ void OptionsState::btnControlsClick(Action *)
  */
 void OptionsState::btnDisplayUpClick(Action *)
 {
-	if (_resAmount == 0)
+	if (_res.size() == 0)
 		return;
 	if (_resCurrent <= 0)
 	{
-		_resCurrent = _resAmount-1;
+		_resCurrent = _res.size()-1;
 	}
 	else
 	{
 		_resCurrent--;
 	}
 	std::wstringstream ssW, ssH;
-	ssW << (int)_res[_resCurrent]->w;
-	ssH << (int)_res[_resCurrent]->h;
+	ssW << _res[_resCurrent].w;
+	ssH << _res[_resCurrent].h;
 	_txtDisplayWidth->setText(ssW.str());
 	_txtDisplayHeight->setText(ssH.str());
 }
@@ -452,9 +455,9 @@ void OptionsState::btnDisplayUpClick(Action *)
  */
 void OptionsState::btnDisplayDownClick(Action *)
 {
-	if (_resAmount == 0)
+	if (_res.size() == 0)
 		return;
-	if (_resCurrent >= _resAmount-1)
+	if (_resCurrent >= _res.size()-1)
 	{
 		_resCurrent = 0;
 	}
@@ -463,8 +466,8 @@ void OptionsState::btnDisplayDownClick(Action *)
 		_resCurrent++;
 	}
 	std::wstringstream ssW, ssH;
-	ssW << (int)_res[_resCurrent]->w;
-	ssH << (int)_res[_resCurrent]->h;
+	ssW << _res[_resCurrent].w;
+	ssH << _res[_resCurrent].h;
 	_txtDisplayWidth->setText(ssW.str());
 	_txtDisplayHeight->setText(ssH.str());
 }

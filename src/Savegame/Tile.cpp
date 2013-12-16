@@ -47,7 +47,7 @@ Tile::SerializationKey Tile::serializationKey =
 * constructor
 * @param pos Position.
 */
-Tile::Tile(const Position& pos): _smoke(0), _fire(0), _explosive(0), _pos(pos), _unit(0), _animationOffset(0), _markerColor(0), _visible(false), _preview(-1), _TUMarker(0), _overlaps(0)
+Tile::Tile(const Position& pos): _smoke(0), _fire(0), _explosive(0), _pos(pos), _unit(0), _animationOffset(0), _markerColor(0), _visible(false), _preview(-1), _TUMarker(0), _overlaps(0), _aimed(false)
 {
 	for (int i = 0; i < 4; ++i)
 	{
@@ -874,6 +874,16 @@ int Tile::getOverlaps() const
 void Tile::addOverlap()
 {
 	++_overlaps;
+}
+
+void Tile::setAimed(bool aimed)
+{
+	_aimed = aimed;
+}
+
+bool Tile::isAimed()
+{
+	return _aimed;
 }
 
 }

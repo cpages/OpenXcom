@@ -19,6 +19,7 @@
 #ifndef OPENXCOM_OPTIONSSTATE_H
 #define OPENXCOM_OPTIONSSTATE_H
 
+#include <vector>
 #include "../Engine/State.h"
 #include "OptionsBaseState.h"
 #include <SDL.h>
@@ -57,8 +58,8 @@ private:
 	Text *_txtSoundVolume;
 	Slider *_slrSoundVolume;
 	TextButton *_btnOk, *_btnCancel, *_btnDefault, *_btnLanguage, *_btnControls, *_btnAdvanced;
-	SDL_Rect** _res;
-	int _resAmount, _resCurrent;
+	std::vector<SDL_DisplayMode> _res;
+	int _resCurrent;
 	bool _wClicked, _hClicked;
 	std::vector<std::string> _filters, _filterPaths;
 	size_t _selFilter;

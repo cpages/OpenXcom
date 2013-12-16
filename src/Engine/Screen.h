@@ -21,7 +21,6 @@
 
 #include <SDL.h>
 #include <string>
-#include "OpenGL.h"
 
 namespace OpenXcom
 {
@@ -44,7 +43,9 @@ public:
 	static int BASE_HEIGHT;
 
 private:
-	SDL_Surface *_screen;
+	//SDL_Surface *_screen;
+	SDL_Window *_window;
+	SDL_Renderer *_renderer;
 	void *_misalignedPixelBuffer;
 	int _bpp;
 	double _scaleX, _scaleY;
@@ -55,8 +56,9 @@ private:
 	SDL_Color deferredPalette[256];
 	int _numColors, _firstColor;
 	bool _pushPalette;
-	OpenGL glOutput;
+	//OpenGL glOutput;
 	Surface *_surface;
+	SDL_Texture *_texture;
 public:
 	/// Creates a new display screen with the specified resolution.
 	Screen(int width, int height, int bpp, bool fullscreen, int windowedModePositionX, int windowedModePositionY);

@@ -71,8 +71,8 @@ MiniMapState::MiniMapState (Game * game, Camera * camera, SavedBattleGame * batt
 	btnLvlUp->onMouseClick((ActionHandler)&MiniMapState::btnLevelUpClick);
 	btnLvlDwn->onMouseClick((ActionHandler)&MiniMapState::btnLevelDownClick);
 	btnOk->onMouseClick((ActionHandler)&MiniMapState::btnOkClick);
-	btnOk->onKeyboardPress((ActionHandler)&MiniMapState::btnOkClick, (SDLKey)Options::getInt("keyCancel"));
-	btnOk->onKeyboardPress((ActionHandler)&MiniMapState::btnOkClick, (SDLKey)Options::getInt("keyBattleMap"));
+	btnOk->onKeyboardPress((ActionHandler)&MiniMapState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	btnOk->onKeyboardPress((ActionHandler)&MiniMapState::btnOkClick, (SDL_Keycode)Options::getInt("keyBattleMap"));
 	_txtLevel->setBig();
 	_txtLevel->setColor(Palette::blockOffset(4));
 	_txtLevel->setHighContrast(true);
@@ -100,13 +100,13 @@ MiniMapState::~MiniMapState()
 void MiniMapState::handle(Action *action)
 {
 	State::handle(action);
-	if (action->getDetails()->type == SDL_MOUSEBUTTONDOWN)
+	if (action->getDetails()->type == SDL_MOUSEWHEEL)
 	{
-		if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
+		if (action->getDetails()->wheel.y < 0)
 		{
 			btnLevelUpClick(action);
 		}
-		else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN)
+		else
 		{
 			btnLevelDownClick(action);
 		}

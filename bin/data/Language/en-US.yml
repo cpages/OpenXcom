@@ -1152,6 +1152,8 @@ en-US:
   STR_BATTLENOTIFYDEATH_DESC: "Display notifications every time one of your soldiers dies."
   STR_BATTLENEWPREVIEWPATH: "Pathfinding preview"
   STR_BATTLENEWPREVIEWPATH_DESC: "Left-click highlights the path your unit will take to the destination, double-click moves the unit."
+  STR_BATTLESHOOTPREVIEW: "Shoot preview"
+  STR_BATTLESHOOTPREVIEW_DESC: "In fire mode, left-clicking highlights the aimed target. Second click shoots"
   STR_BATTLERANGEBASEDACCURACY: "Range-based accuracy"
   STR_BATTLERANGEBASEDACCURACY_DESC: "Accuracy of shots takes visibility, distance, and other factors into account."
   STR_CANMANUFACTUREMOREITEMSPERHOUR: "Sub-hour manufacture"

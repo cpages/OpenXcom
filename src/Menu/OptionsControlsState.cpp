@@ -140,12 +140,12 @@ OptionsControlsState::OptionsControlsState(Game *game, OptionsOrigin origin) : O
 	_btnOk->setColor(Palette::blockOffset(8)+5);
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&OptionsControlsState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&OptionsControlsState::btnOkClick, (SDLKey)Options::getInt("keyOk"));
+	_btnOk->onKeyboardPress((ActionHandler)&OptionsControlsState::btnOkClick, (SDL_Keycode)Options::getInt("keyOk"));
 
 	_btnCancel->setColor(Palette::blockOffset(8)+5);
 	_btnCancel->setText(tr("STR_CANCEL_UC"));
 	_btnCancel->onMouseClick((ActionHandler)&OptionsControlsState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler)&OptionsControlsState::btnCancelClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler)&OptionsControlsState::btnCancelClick, (SDL_Keycode)Options::getInt("keyCancel"));
 
 	_txtTitle->setColor(Palette::blockOffset(15)-1);
 	_txtTitle->setBig();
@@ -229,7 +229,7 @@ void OptionsControlsState::addControls(KeyOption keys[], int count)
 {
 	for (int i = 0; i < count; ++i)
 	{
-		keys[i].key = (SDLKey)Options::getInt(keys[i].option);
+		keys[i].key = (SDL_Keycode)Options::getInt(keys[i].option);
 		std::wstring name = tr(keys[i].name);
 		std::wstring key = Language::utf8ToWstr(ucWords(SDL_GetKeyName(keys[i].key)));
 		if (keys[i].key == SDLK_UNKNOWN)
@@ -327,7 +327,7 @@ void OptionsControlsState::lstControlsKeyPress(Action *action)
 {
 	if (_selected != -1)
 	{
-		SDLKey key = action->getDetails()->key.keysym.sym;
+		SDL_Keycode key = action->getDetails()->key.keysym.sym;
 		if (key != 0)
 		{
 			_selKey->key = key;

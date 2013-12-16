@@ -20,7 +20,6 @@
 #include "Options.h"
 #include "../version.h"
 #include <SDL.h>
-#include <SDL_keysym.h>
 #include <SDL_mixer.h>
 #include <stdio.h>
 #include <iostream>
@@ -89,7 +88,11 @@ void createDefault()
 	setInt("musicVolume", MIX_MAX_VOLUME);
 	setString("language", "");
 	setInt("battleScrollSpeed", 12); // 4, 8, 12, 16, 24
+#ifdef __ANDROID__
+	setInt("battleScrollType", SCROLL_DRAG); // just for preventing auto
+#else
 	setInt("battleScrollType", SCROLL_AUTO);
+#endif
 	setInt("battleScrollDragButton", SDL_BUTTON_MIDDLE);
 	setBool("battleScrollDragInvert", false); // true drags away from the cursor, false drags towards (like a grab)
 	setInt("battleScrollDragTimeTolerance", 300); // miliSecond
@@ -99,7 +102,13 @@ void createDefault()
 	setInt("battleAlienSpeed", 30); // 40, 30, 20, 10, 5, 1
 	setBool("battleInstantGrenade", false); // set to true if you want to play with the alternative grenade handling
 	setInt("battleExplosionHeight", 0); //0, 1, 2, 3
+#ifdef __ANDROID__
+	setInt("battleNewPreviewPath", 3); // for android, set full preview by default
+	setBool("battleShootPreview", true); // for android, also shoot preview
+#else
 	setInt("battleNewPreviewPath", 0); // requires double-click to confirm moves 0 = none, 1 = arrows, 2 = numbers, 3 = full
+	setBool("battleShootPreview", false); // double click to shoot
+#endif
 	setBool("battleRangeBasedAccuracy", false);
 	setBool("fpsCounter", false);
 	setBool("craftLaunchAlways", false);

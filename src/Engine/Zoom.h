@@ -20,11 +20,11 @@
 #define ZOOM_H
 
 #include <SDL.h>
-#include "OpenGL.h"
 
 namespace OpenXcom
 {
 
+class OpenGL;
 
 class Zoom
 {

@@ -71,9 +71,11 @@ bin/data/UFOINTRO/
 bin/data/UNITS/
 deps/
 docs/html/
-build/
+build*/
 Dependencies/
 #Ignore Vim swap files
 *.swp
 #Ignore NetBeans project directory
 nbproject/
+#ctags index
+src/tags

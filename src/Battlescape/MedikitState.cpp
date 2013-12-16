@@ -174,7 +174,7 @@ MedikitState::MedikitState (Game * game, BattleUnit * targetUnit, BattleAction *
 	_woundTxt->setColor(Palette::blockOffset(2));
 	_woundTxt->setHighContrast(true);
 	endButton->onMouseClick((ActionHandler)&MedikitState::onEndClick);
-	endButton->onKeyboardPress((ActionHandler)&MedikitState::onEndClick, (SDLKey)Options::getInt("keyCancel"));
+	endButton->onKeyboardPress((ActionHandler)&MedikitState::onEndClick, (SDL_Keycode)Options::getInt("keyCancel"));
 	healButton->onMouseClick((ActionHandler)&MedikitState::onHealClick);
 	stimulantButton->onMouseClick((ActionHandler)&MedikitState::onStimulantClick);
 	pkButton->onMouseClick((ActionHandler)&MedikitState::onPainKillerClick);

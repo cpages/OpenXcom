@@ -20,7 +20,7 @@ grt,
                                                                   ----+
 */
 
-#define version "0.2"
+//#define version "0.2"
 /*
 */
 #include <stdio.h>
@@ -37,6 +37,7 @@ grt,
 #include "Exception.h"
 #include "Zoom.h"
 #include "../aresame.h"
+#include "Surface.h"
 
 namespace OpenXcom
 {
@@ -199,7 +200,7 @@ void COLORS256()
       i++;
     }
 	flc.realscreen->setPalette(flc.colors, NumColorsSkip, i);
-	SDL_SetColors(flc.mainscreen, flc.colors, NumColorsSkip, i);
+	SDL_SetPaletteColors(flc.mainscreen->format->palette, flc.colors, NumColorsSkip, i);
 	flc.realscreen->getSurface(); // force palette update to really happen
   }
 } /* COLORS256 */
@@ -360,7 +361,7 @@ void DECODE_COLOR()
       i++;
     }
 	flc.realscreen->setPalette(flc.colors, NumColorsSkip, i);
-    SDL_SetColors(flc.mainscreen, flc.colors, NumColorsSkip, i);
+    SDL_SetPaletteColors(flc.mainscreen->format->palette, flc.colors, NumColorsSkip, i);
 	flc.realscreen->getSurface(); // force palette update to really happen
   }
 } /* DECODE_COLOR  */
@@ -490,7 +491,7 @@ int FlcInit(const char *filename)
 	  flc.mainscreen = flc.realscreen->getSurface()->getSurface();
   } else
   {
-	  flc.mainscreen = SDL_AllocSurface(SDL_SWSURFACE, flc.screen_w, flc.screen_h, 8, 0, 0, 0, 0);
+	  flc.mainscreen = SDL_CreateRGBSurface(SDL_SWSURFACE, flc.screen_w, flc.screen_h, 8, 0, 0, 0, 0);
   }
   return 0;
   //SDLInit(filename);

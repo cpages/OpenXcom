@@ -106,6 +106,10 @@ public:
 	void mapClick(Action *action);
 	/// Handler for entering with mouse to the map surface.
 	void mapIn(Action *action);
+#ifdef __ANDROID__
+	/// Handler for buttons
+	void mapKey(Action *action);
+#endif
 	/// Handler for clicking the Unit Up button.
 	void btnUnitUpClick(Action *action);
 	/// Handler for clicking the Unit Down button.

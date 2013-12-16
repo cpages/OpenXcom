@@ -75,7 +75,7 @@ namespace OpenXcom
  * @param y Y position in pixels.
  * @param visibleMapHeight Current visible map height.
  */
-Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) : InteractiveSurface(width, height, x, y), _game(game), _arrow(0), _selectorX(0), _selectorY(0), _mouseX(0), _mouseY(0), _cursorType(CT_NORMAL), _cursorSize(1), _animFrame(0), _launch(false), _visibleMapHeight(visibleMapHeight), _unitDying(false)
+Map::Map(Game *game, int width, int height, int x, int y, int visibleMapHeight) : InteractiveSurface(width, height, x, y), _game(game), _arrow(0), _selectorX(0), _selectorY(0), _mouseX(0), _mouseY(0), _cursorType(CT_NORMAL), _cursorSize(1), _animFrame(0), _launch(false), _visibleMapHeight(visibleMapHeight), _unitDying(false), _scrollAccumX(0), _scrollAccumY(0)
 {
 	_previewSetting = Options::getInt("battleNewPreviewPath");
 	if (Options::getBool("traceAI"))
@@ -634,6 +634,25 @@ void Map::drawTerrain(Surface *surface)
 							tmpSurface->blitNShade(surface, screenPosition.x - 16, screenPosition.y - (20 - tile->getTerrainLevel()), 0, false, tileColor);
 						}
 					}
+					// Draw Aim Preview
+					if (tile->isAimed())
+					{
+						if (itZ > 0 && tile->hasNoFloor(tileBelow))
+						{
+							tmpSurface = _res->getSurfaceSet("Pathfinding")->getFrame(23);
+							if (tmpSurface)
+							{
+								tmpSurface->blitNShade(surface, screenPosition.x - 16, screenPosition.y - 20, 0, false, tile->getMarkerColor());
+							}
+						}
+						int overlay = tile->getPreview() + 11;
+						tmpSurface = _res->getSurfaceSet("Pathfinding")->getFrame(overlay);
+						if (tmpSurface)
+						{
+							const int adjustment = 20 - tile->getTerrainLevel();
+							tmpSurface->blitNShade(surface, screenPosition.x - 16, screenPosition.y - adjustment, 0, false, tile->getMarkerColor());
+						}
+					}
 					// Draw cursor front
 					if (_cursorType != CT_NONE && _selectorX > itX - _cursorSize && _selectorY > itY - _cursorSize && _selectorX < itX+1 && _selectorY < itY+1 && !_save->getBattleState()->getMouseOverIcons())
 					{
@@ -855,6 +874,32 @@ void Map::mouseOver(Action *action, State *state)
 	_mouseX = (int)action->getAbsoluteXMouse();
 	_mouseY = (int)action->getAbsoluteYMouse();
 	setSelectorPosition(_mouseX, _mouseY);
+}
+
+/**
+ * Handles finger motion events on the map
+ * @param action Pointer to an action.
+ * @param state State that the action handlers belong to.
+ */
+void Map::fingerMotion(Action *action, State *state)
+{
+	_scrollAccumX += action->getDetails()->tfinger.dx *
+		Options::getInt("baseXResolution");
+	_scrollAccumY += action->getDetails()->tfinger.dy *
+		Options::getInt("baseYResolution");
+	int scrollIncX = 0;
+	int scrollIncY = 0;
+	if (std::abs(_scrollAccumX) > 1)
+	{
+		scrollIncX = (int)_scrollAccumX;
+		_scrollAccumX -= scrollIncX;
+	}
+	if (std::abs(_scrollAccumY) > 1)
+	{
+		scrollIncY = (int)_scrollAccumY;
+		_scrollAccumY -= scrollIncY;
+	}
+	_camera->scrollXY(scrollIncX, scrollIncY, false);
 }
 
 

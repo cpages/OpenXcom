@@ -54,6 +54,10 @@
 #include <pwd.h>
 #endif
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 namespace OpenXcom
 {
 namespace CrossPlatform
@@ -73,6 +77,8 @@ void showError(const std::string &error)
 {
 #ifdef _WIN32
 	MessageBoxA(NULL, error.c_str(), "OpenXcom Error", MB_ICONERROR | MB_OK);
+#elif defined (__ANDROID__)
+	__android_log_print(ANDROID_LOG_ERROR, "OpenXcom", "%s", error.c_str());
 #else
 	std::cerr << error << std::endl;
 #endif
@@ -108,6 +114,12 @@ std::vector<std::string> findDataFolders()
 	std::vector<std::string> list;
 #ifdef __MORPHOS__
 	list.push_back("PROGDIR:data/");
+	return list;
+#endif
+
+#ifdef __ANDROID__
+	list.push_back("/sdcard/openxcom/data/");
+	list.push_back("/storage/extSdCard/openxcom/data/");
 	return list;
 #endif
 	
@@ -204,6 +216,12 @@ std::vector<std::string> findUserFolders()
 	return list;
 #endif
 
+#ifdef __ANDROID__
+	list.push_back("/sdcard/openxcom/");
+	list.push_back("/storage/extSdCard/openxcom/");
+	return list;
+#endif
+
 	
 #ifdef _WIN32
 	char path[MAX_PATH];
@@ -270,6 +288,10 @@ std::string findConfigFolder()
 {
 #ifdef __MORPHOS__
 	return "PROGDIR:";
+#endif
+
+#ifdef __ANDROID__
+	return "/sdcard/openxcom/";
 #endif
 
 #if defined(_WIN32) || defined(__APPLE__)
@@ -665,6 +687,9 @@ std::string noExt(const std::string &filename)
  */
 std::string getLocale()
 {
+#ifdef __ANDROID__
+	return std::string("en-US");
+#endif
 #ifdef _WIN32
 	char language[9], country[9];
 

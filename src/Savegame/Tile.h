@@ -77,6 +77,7 @@ protected:
 	int _preview;
 	int _TUMarker;
 	int _overlaps;
+	bool _aimed;
 public:
 	/// Creates a tile.
 	Tile(const Position& pos);
@@ -223,6 +224,8 @@ public:
 	int getOverlaps() const;
 	/// increment the overlap value on this tile.
 	void addOverlap();
+	void setAimed(bool aimed);
+	bool isAimed();
 };
 
 }

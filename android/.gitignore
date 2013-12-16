@@ -1,0 +1,14 @@
+libs
+obj
+bin
+gen
+local.properties
+jni/SDL
+jni/SDL2_image
+jni/SDL2_mixer
+jni/SDL_gfx
+jni/boost
+jni/yamlcpp
+jni/libwebp
+jni/libmikmod
+jni/smpeg

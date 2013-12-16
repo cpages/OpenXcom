@@ -20,6 +20,7 @@
 #include <sstream>
 #include <cmath>
 #include <iomanip>
+#include <cassert>
 #include <limits.h>
 #include "../lodepng.h"
 #include "Exception.h"
@@ -29,7 +30,6 @@
 #include "Options.h"
 #include "CrossPlatform.h"
 #include "Zoom.h"
-#include "OpenGL.h"
 #include "Timer.h"
 #include <SDL.h>
 
@@ -42,17 +42,20 @@ int Screen::BASE_HEIGHT = 200;
 /// Sets the _flags and _bpp variables based on game options; needed in more than one place now
 void Screen::makeVideoFlags()
 {
-	_flags = SDL_HWSURFACE|SDL_DOUBLEBUF|SDL_HWPALETTE;
+	_flags = SDL_WINDOW_OPENGL;
+#if 0
 	if (Options::getBool("asyncBlit")) _flags |= SDL_ASYNCBLIT;
 	if (isOpenGLEnabled()) _flags = SDL_OPENGL;
 	if (Options::getBool("allowResize")) _flags |= SDL_RESIZABLE;
 	if (Options::getBool("borderless")) _flags |= SDL_NOFRAME;
+#endif
 	if (_fullscreen)
 	{
-		_flags |= SDL_FULLSCREEN;
+		_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
 
-	_bpp = (Screen::isHQXEnabled() || Screen::isOpenGLEnabled()) ? 32 : 8;
+	//_bpp = (Screen::isHQXEnabled() || Screen::isOpenGLEnabled()) ? 32 : 8;
+	_bpp = 32;
 }
 
 
@@ -65,7 +68,7 @@ void Screen::makeVideoFlags()
  * @warning Currently the game is designed for 8bpp, so there's no telling what'll
  * happen if you use a different value.
  */
-Screen::Screen(int width, int height, int bpp, bool fullscreen, int windowedModePositionX, int windowedModePositionY) : _bpp(bpp), _scaleX(1.0), _scaleY(1.0), _fullscreen(fullscreen), _numColors(0), _firstColor(0), _surface(0)
+Screen::Screen(int width, int height, int bpp, bool fullscreen, int windowedModePositionX, int windowedModePositionY) : _window(0), _renderer(0), _bpp(bpp), _scaleX(1.0), _scaleY(1.0), _fullscreen(fullscreen), _numColors(0), _firstColor(0), _surface(0)
 {
 	char *prev = (char*)"";
 	if (!_fullscreen && (windowedModePositionX != -1 || windowedModePositionY != -1))
@@ -76,7 +79,7 @@ Screen::Screen(int width, int height, int bpp, bool fullscreen, int windowedMode
 		std::ostringstream ss;
 		ss << "SDL_VIDEO_WINDOW_POS=" << std::dec << windowedModePositionX << "," << windowedModePositionY;
 		
-		SDL_putenv(const_cast<char*>(ss.str().c_str()));
+		//SDL_setenv(const_cast<char*>(ss.str().c_str()));
 	}
 	setResolution(width, height);
 	if (!_fullscreen  && (windowedModePositionX != -1 || windowedModePositionY != -1))
@@ -84,7 +87,7 @@ Screen::Screen(int width, int height, int bpp, bool fullscreen, int windowedMode
 		std::ostringstream ss;
 		ss << "SDL_VIDEO_WINDOW_POS=" << prev;
 
-		SDL_putenv(const_cast<char*>(ss.str().c_str()));
+		//SDL_setenv(const_cast<char*>(ss.str().c_str()));
 	}
 	memset(deferredPalette, 0, 256*sizeof(SDL_Color));
 }
@@ -158,32 +161,11 @@ void Screen::handle(Action *action)
  */
 void Screen::flip()
 {
-	if (getWidth() != BASE_WIDTH || getHeight() != BASE_HEIGHT || isOpenGLEnabled())
-	{
-		Zoom::flipWithZoom(_surface->getSurface(), _screen, _topBlackBand, _bottomBlackBand, _leftBlackBand, _rightBlackBand, &glOutput);
-	}
-	else
-	{
-		SDL_BlitSurface(_surface->getSurface(), 0, _screen, 0);
-	}
-
-	// perform any requested palette update
-	if (_pushPalette && _numColors && _screen->format->BitsPerPixel == 8)
-	{
-		if (_screen->format->BitsPerPixel == 8 && SDL_SetColors(_screen, &(deferredPalette[_firstColor]), _firstColor, _numColors) == 0)
-		{
-			Log(LOG_DEBUG) << "Display palette doesn't match requested palette";
-		}
-		_numColors = 0;
-		_pushPalette = false;
-	}
-
-
-	
-	if (SDL_Flip(_screen) == -1)
-	{
-		throw Exception(SDL_GetError());
-	}
+	SDL_UpdateTexture(_texture, NULL, _surface->getSurface()->pixels,
+			_surface->getSurface()->pitch);
+	SDL_RenderClear(_renderer);
+	SDL_RenderCopy(_renderer, _texture, NULL, NULL);
+	SDL_RenderPresent(_renderer); //TODO: check error?
 }
 
 /**
@@ -218,11 +200,13 @@ void Screen::setPalette(SDL_Color* colors, int firstcolor, int ncolors, bool imm
 
 	_surface->setPalette(colors, firstcolor, ncolors);
 
+#if 0
 	// defer actual update of screen until SDL_Flip()
 	if (immediately && _screen->format->BitsPerPixel == 8 && SDL_SetColors(_screen, colors, firstcolor, ncolors) == 0)
 	{
 		Log(LOG_DEBUG) << "Display palette doesn't match requested palette";
 	}
+#endif
 
 	// Sanity check
 	/*
@@ -257,7 +241,8 @@ SDL_Color *Screen::getPalette() const
  */
 int Screen::getWidth() const
 {
-	return _screen->w;
+	//return _screen->w;
+	return BASE_WIDTH;
 }
 
 /**
@@ -266,7 +251,8 @@ int Screen::getWidth() const
  */
 int Screen::getHeight() const
 {
-	return _screen->h;
+	//return _screen->h;
+	return BASE_HEIGHT;
 }
 
 /**
@@ -279,23 +265,28 @@ void Screen::setResolution(int width, int height)
 {
 	makeVideoFlags();
 
-	if (!_surface || (_surface && 
-		(_surface->getSurface()->format->BitsPerPixel != _bpp || 
-		_surface->getSurface()->w != BASE_WIDTH ||
-		_surface->getSurface()->h != BASE_HEIGHT))) // don't reallocate _surface if not necessary, it's a waste of CPU cycles
+	if (!_window) //TODO: fix the condition to allow res change
 	{
-		if (_surface) delete _surface;
-		_surface = new Surface((int)BASE_WIDTH, (int)BASE_HEIGHT, 0, 0, Screen::isHQXEnabled() ? 32 : 8); // only HQX needs 32bpp for this surface; the OpenGL class has its own 32bpp buffer
-		if (_surface->getSurface()->format->BitsPerPixel == 8) _surface->setPalette(deferredPalette);
+		Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
+		if (SDL_CreateWindowAndRenderer(width, height, _flags, &_window,
+					&_renderer) != 0)
+		{
+			throw Exception(SDL_GetError());
+		}
+
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+		SDL_RenderSetLogicalSize(_renderer, BASE_WIDTH, BASE_HEIGHT);
+	}
+	assert (_window != 0 && _renderer != 0);
+
+	//create the needed surface and texture the first time
+	if (!_surface)
+	{
+		_surface = new Surface(BASE_WIDTH, BASE_HEIGHT, 0, 0, 32);
+		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
+				SDL_TEXTUREACCESS_STREAMING, BASE_WIDTH, BASE_HEIGHT);
 	}
 	SDL_SetColorKey(_surface->getSurface(), 0, 0); // turn off color key! 
-
-	Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
-	_screen = SDL_SetVideoMode(width, height, _bpp, _flags);
-	if (_screen == 0)
-	{
-		throw Exception(SDL_GetError());
-	}
 	_scaleX = getWidth() / (double)BASE_WIDTH;
 	_scaleY = getHeight() / (double)BASE_HEIGHT;
 
@@ -366,6 +357,7 @@ void Screen::setResolution(int width, int height)
 		_topBlackBand = _bottomBlackBand = _leftBlackBand = _rightBlackBand = _cursorTopBlackBand = _cursorLeftBlackBand = 0;
 	}
 
+#if 0
 	if (isOpenGLEnabled()) 
 	{
 		glOutput.init(BASE_WIDTH, BASE_HEIGHT);
@@ -374,12 +366,9 @@ void Screen::setResolution(int width, int height)
 		glOutput.setVSync(Options::getBool("vSyncForOpenGL"));
 		OpenGL::checkErrors = Options::getBool("checkOpenGLErrors");
 	}
+#endif
 
-	Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x" << (int)_screen->format->BitsPerPixel << ".";
-	if (_screen->format->BitsPerPixel == 8)
-	{
-		setPalette(getPalette());
-	}
+	Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32.";
 }
 
 /**
@@ -394,11 +383,11 @@ void Screen::setFullscreen(bool full)
 	_fullscreen = full;
 	if (_fullscreen)
 	{
-		_flags |= SDL_FULLSCREEN;
+		_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
 	else
 	{
-		_flags &= ~SDL_FULLSCREEN;
+		_flags &= ~SDL_WINDOW_FULLSCREEN_DESKTOP;
 	}
 	Options::setBool("fullscreen", _fullscreen);
 	setResolution(getWidth(), getHeight());
@@ -446,7 +435,9 @@ int Screen::getCursorLeftBlackBand() const
  */
 void Screen::screenshot(const std::string &filename) const
 {
-	SDL_Surface *screenshot = SDL_AllocSurface(0, getWidth(), getHeight(), 24, 0xff, 0xff00, 0xff0000, 0);
+	assert (0 && "FIXME: no time for screenshots");
+#if 0
+	SDL_Surface *screenshot = SDL_CreateRGBSurface(0, getWidth(), getHeight(), 24, 0xff, 0xff00, 0xff0000, 0);
 
 
 	if (isOpenGLEnabled())
@@ -474,6 +465,7 @@ void Screen::screenshot(const std::string &filename) const
 	}
 
 	SDL_FreeSurface(screenshot);
+#endif
 }
 
 

@@ -80,7 +80,7 @@ CraftSoldiersState::CraftSoldiersState(Game *game, Base *base, size_t craft) : S
 	_btnOk->setColor(Palette::blockOffset(13)+10);
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&CraftSoldiersState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&CraftSoldiersState::btnOkClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&CraftSoldiersState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
 
 	_txtTitle->setColor(Palette::blockOffset(15)+6);
 	_txtTitle->setBig();
@@ -183,7 +183,9 @@ void CraftSoldiersState::lstItemsLeftArrowClick(Action *action)
 				_base->getSoldiers()->at(row-1) = s;
 				if (row != _lstSoldiers->getScroll())
 				{
-					SDL_WarpMouse(action->getXMouse(), action->getYMouse() - static_cast<Uint16>(8 * action->getYScale()));
+					assert (0 && "FIXME");
+					SDL_Window *win = 0;
+					SDL_WarpMouseInWindow(win, action->getXMouse(), action->getYMouse() - static_cast<Uint16>(8 * action->getYScale()));
 				}
 				else
 				{
@@ -220,7 +222,9 @@ void CraftSoldiersState::lstItemsRightArrowClick(Action *action)
 				_base->getSoldiers()->at(row+1) = s;
 				if (row != 15 + _lstSoldiers->getScroll())
 				{
-					SDL_WarpMouse(action->getXMouse(), action->getYMouse() + static_cast<Uint16>(8 * action->getYScale()));
+					assert (0 && "FIXME");
+					SDL_Window *win = 0;
+					SDL_WarpMouseInWindow(win, action->getXMouse(), action->getYMouse() + static_cast<Uint16>(8 * action->getYScale()));
 				}
 				else
 				{

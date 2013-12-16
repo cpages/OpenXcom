@@ -80,9 +80,9 @@ InterceptState::InterceptState(Game *game, Globe *globe, Base *base, Target *tar
 	_btnCancel->setColor(Palette::blockOffset(8)+5);
 	_btnCancel->setText(tr("STR_CANCEL"));
 	_btnCancel->onMouseClick((ActionHandler)&InterceptState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler)&InterceptState::btnCancelClick, (SDLKey)Options::getInt("keyOk"));
-	_btnCancel->onKeyboardPress((ActionHandler)&InterceptState::btnCancelClick, (SDLKey)Options::getInt("keyCancel"));
-	_btnCancel->onKeyboardPress((ActionHandler)&InterceptState::btnCancelClick, (SDLKey)Options::getInt("keyGeoIntercept"));
+	_btnCancel->onKeyboardPress((ActionHandler)&InterceptState::btnCancelClick, (SDL_Keycode)Options::getInt("keyOk"));
+	_btnCancel->onKeyboardPress((ActionHandler)&InterceptState::btnCancelClick, (SDL_Keycode)Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler)&InterceptState::btnCancelClick, (SDL_Keycode)Options::getInt("keyGeoIntercept"));
 
 	_txtTitle->setColor(Palette::blockOffset(15)-1);
 	_txtTitle->setAlign(ALIGN_CENTER);

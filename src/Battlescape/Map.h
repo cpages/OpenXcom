@@ -71,6 +71,7 @@ private:
 	std::vector<Position> _waypoints;
 	bool _unitDying;
 	int _previewSetting;
+	float _scrollAccumX, _scrollAccumY;
 public:
 	/// Creates a new map at the specified position and size.
 	Map(Game *game, int width, int height, int x, int y, int visibleMapHeight);
@@ -90,6 +91,7 @@ public:
 	void mouseRelease(Action *action, State *state);
 	/// Special handling for mouse over
 	void mouseOver(Action *action, State *state);
+	void fingerMotion(Action *action, State *state);
 	/// Special handling for key presses.
 	void keyboardPress(Action *action, State *state);
 	/// Special handling for key releases.

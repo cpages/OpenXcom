@@ -73,7 +73,7 @@ inline void* NewAligned(int bpp, int width, int height)
 
 #ifndef _WIN32
 
-	#ifdef __MORPHOS__
+	#if defined(__MORPHOS__) || defined(__ANDROID__)
 
 	buffer = calloc( total, 1 );
 	if (!buffer)
@@ -137,14 +137,17 @@ inline void DeleteAligned(void* buffer)
 Surface::Surface(int width, int height, int x, int y, int bpp) : _x(x), _y(y), _visible(true), _hidden(false), _redraw(false), _originalColors(0), _alignedBuffer(0)
 {
 	_alignedBuffer = NewAligned(bpp, width, height);
-	_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, GetPitch(bpp, width), 0, 0, 0, 0);
+	if (bpp == 32)
+		_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, 32, GetPitch(32, width), 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+	else
+		_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, GetPitch(bpp, width), 0, 0, 0, 0);
 
 	if (_surface == 0)
 	{
 		throw Exception(SDL_GetError());
 	}
 
-	SDL_SetColorKey(_surface, SDL_SRCCOLORKEY, 0);
+	SDL_SetColorKey(_surface, SDL_TRUE, 0);
 
 	_crop.w = 0;
 	_crop.h = 0;
@@ -169,10 +172,10 @@ Surface::Surface(const Surface& other)
 		int pitch = GetPitch(bpp, width);
 		_alignedBuffer = NewAligned(bpp, width, height);
 		_surface = SDL_CreateRGBSurfaceFrom(_alignedBuffer, width, height, bpp, pitch, 0, 0, 0, 0);
-		SDL_SetColorKey(_surface, SDL_SRCCOLORKEY, 0);
+		SDL_SetColorKey(_surface, 1, 0);
 		//cant call `SetPalette` because its vitual function and it dont work correctly in constructor
 		//additionally it use original colors, not temporarily ones.
-		SDL_SetColors(_surface, other._originalColors ? other._originalColors : other.getPalette(), 0, 255);
+		SDL_SetPaletteColors(_surface->format->palette, other._originalColors ? other._originalColors : other.getPalette(), 0, 255);
 		memcpy(_alignedBuffer, other._alignedBuffer, height*pitch);
 	}
 	else
@@ -698,7 +701,7 @@ SDL_Rect *Surface::getCrop()
  */
 void Surface::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 {
-	SDL_SetColors(_surface, colors, firstcolor, ncolors);
+	SDL_SetPaletteColors(_surface->format->palette, colors, firstcolor, ncolors);
 }
 
 /**
@@ -762,13 +765,15 @@ void Surface::paletteShift(int off, int mul, int mid)
 		_originalColors[i].r = getPalette()[i].r;
 		_originalColors[i].g = getPalette()[i].g;
 		_originalColors[i].b = getPalette()[i].b;
+		_originalColors[i].a = getPalette()[i].a;
 		newColors[i].r = getPalette()[j].r;
 		newColors[i].g = getPalette()[j].g;
 		newColors[i].b = getPalette()[j].b;
+		newColors[i].a = getPalette()[j].a;
 	}
 
 	// assign it and free it
-	SDL_SetColors(_surface, newColors, 0, ncolors);
+	SDL_SetPaletteColors(_surface->format->palette, newColors, 0, ncolors);
 	free(newColors);
 
 	return;
@@ -782,7 +787,7 @@ void Surface::paletteRestore()
 {
 	if (_originalColors)
 	{
-		SDL_SetColors(_surface, _originalColors, 0, 256);
+		SDL_SetPaletteColors(_surface->format->palette, _originalColors, 0, 256);
 		free(_originalColors);
 		_originalColors = 0;
 	}

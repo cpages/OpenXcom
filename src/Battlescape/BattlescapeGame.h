@@ -91,6 +91,7 @@ private:
 	/// Shows the infoboxes in the queue (if any).
 	void showInfoBoxQueue();
 	bool _playedAggroSound, _endTurnRequested, _kneelReserved;
+	Position _aimedPos;
 public:
 	/// Creates the BattlescapeGame state.
 	BattlescapeGame(SavedBattleGame *save, BattlescapeState *parentState);

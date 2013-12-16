@@ -35,6 +35,10 @@
 #include <time.h>
 #endif
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 namespace OpenXcom
 {
 
@@ -96,10 +100,14 @@ inline Logger::~Logger()
 	}
 	std::ostringstream ss;
 	ss << "[" << now() << "]" << "\t" << os.str();
+#ifdef __ANDROID__
+	__android_log_print(ANDROID_LOG_INFO, "OpenXcom", "%s", ss.str().c_str());
+#else
 	FILE *file = fopen(logFile().c_str(), "a");
 	fprintf(file, "%s", ss.str().c_str());
     fflush(file);
 	fclose(file);
+#endif
 }
 
 inline SeverityLevel& Logger::reportingLevel()

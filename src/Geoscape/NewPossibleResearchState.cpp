@@ -69,11 +69,11 @@ NewPossibleResearchState::NewPossibleResearchState(Game * game, Base * base, con
 	_btnOk->setColor(Palette::blockOffset(8)+5);
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&NewPossibleResearchState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&NewPossibleResearchState::btnOkClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnOk->onKeyboardPress((ActionHandler)&NewPossibleResearchState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
 	_btnResearch->setColor(Palette::blockOffset(8)+5);
 	_btnResearch->setText(tr("STR_ALLOCATE_RESEARCH"));
 	_btnResearch->onMouseClick((ActionHandler)&NewPossibleResearchState::btnResearchClick);
-	_btnResearch->onKeyboardPress((ActionHandler)&NewPossibleResearchState::btnResearchClick, (SDLKey)Options::getInt("keyOk"));
+	_btnResearch->onKeyboardPress((ActionHandler)&NewPossibleResearchState::btnResearchClick, (SDL_Keycode)Options::getInt("keyOk"));
 	_txtTitle->setColor(Palette::blockOffset(15)-1);
 	_txtTitle->setBig();
 	_txtTitle->setAlign(ALIGN_CENTER);

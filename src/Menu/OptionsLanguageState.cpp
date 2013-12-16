@@ -71,7 +71,7 @@ OptionsLanguageState::OptionsLanguageState(Game *game, OptionsOrigin origin) : O
 	_btnCancel->setColor(Palette::blockOffset(8) + 5);
 	_btnCancel->setText(tr("STR_CANCEL"));
 	_btnCancel->onMouseClick((ActionHandler) &OptionsLanguageState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler) &OptionsLanguageState::btnCancelClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler) &OptionsLanguageState::btnCancelClick, (SDL_Keycode)Options::getInt("keyCancel"));
 
 	_langs = Language::getList(_lstLanguages);
 }

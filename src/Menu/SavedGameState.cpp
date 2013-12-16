@@ -82,7 +82,7 @@ SavedGameState::SavedGameState(Game *game, OptionsOrigin origin, int firstValidR
 
 	_btnCancel->setText(tr("STR_CANCEL_UC"));
 	_btnCancel->onMouseClick((ActionHandler) &SavedGameState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler) &SavedGameState::btnCancelClick, (SDLKey) Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler) &SavedGameState::btnCancelClick, (SDL_Keycode) Options::getInt("keyCancel"));
 
 	_txtTitle->setColor(Palette::blockOffset(15)-1);
 	_txtTitle->setBig();

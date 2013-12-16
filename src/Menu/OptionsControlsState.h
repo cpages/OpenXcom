@@ -34,7 +34,7 @@ struct KeyOption
 {
 	std::string option;
 	std::string name;
-	SDLKey key;
+	SDL_Keycode key;
 };
 
 /**

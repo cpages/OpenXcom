@@ -26,12 +26,12 @@ namespace OpenXcom
 
 std::wstring Font::_index = L"";
 
-SDL_Color Font::_palette[] = {{0, 0, 0, 0},
-							  {255, 255, 255, 0},
-							  {207, 207, 207, 0},
-							  {159, 159, 159, 0},
-							  {111, 111, 111, 0},
-							  {63, 63, 63, 0}};
+SDL_Color Font::_palette[] = {{0, 0, 0, 255},
+							  {255, 255, 255, 255},
+							  {207, 207, 207, 255},
+							  {159, 159, 159, 255},
+							  {111, 111, 111, 255},
+							  {63, 63, 63, 255}};
 
 /**
  * Initializes the font with a blank surface.

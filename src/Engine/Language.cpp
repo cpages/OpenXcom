@@ -159,9 +159,13 @@ std::string Language::wstrToCp(const std::wstring& src)
 #else
 	const int MAX = 500;
 	char buffer[MAX];
+#ifndef __ANDROID__
 	setlocale(LC_ALL, "");
+#endif
 	wcstombs(buffer, src.c_str(), MAX);
+#ifndef __ANDROID__
 	setlocale(LC_ALL, "C");
+#endif
 	std::string str(buffer);
 	return str;
 #endif
@@ -267,9 +271,13 @@ std::wstring Language::cpToWstr(const std::string& src)
 #else
 	const int MAX = 500;
 	wchar_t buffer[MAX + 1];
+#ifndef __ANDROID__
 	setlocale(LC_ALL, "");
+#endif
 	size_t len = mbstowcs(buffer, src.c_str(), MAX);
+#ifndef __ANDROID__
 	setlocale(LC_ALL, "C");
+#endif
 	if (len == (size_t)-1)
 		return L"?";
 	return std::wstring(buffer, len);

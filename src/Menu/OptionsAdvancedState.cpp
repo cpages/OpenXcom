@@ -19,6 +19,7 @@
 #include "OptionsAdvancedState.h"
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 #include "../Engine/Game.h"
 #include "../Resource/ResourcePack.h"
 #include "../Engine/Language.h"
@@ -70,12 +71,12 @@ OptionsAdvancedState::OptionsAdvancedState(Game *game, OptionsOrigin origin) : O
 	_btnOk->setColor(Palette::blockOffset(8)+5);
 	_btnOk->setText(tr("STR_OK"));
 	_btnOk->onMouseClick((ActionHandler)&OptionsAdvancedState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&OptionsAdvancedState::btnOkClick, (SDLKey)Options::getInt("keyOk"));
+	_btnOk->onKeyboardPress((ActionHandler)&OptionsAdvancedState::btnOkClick, (SDL_Keycode)Options::getInt("keyOk"));
 
 	_btnCancel->setColor(Palette::blockOffset(8)+5);
 	_btnCancel->setText(tr("STR_CANCEL"));
 	_btnCancel->onMouseClick((ActionHandler)&OptionsAdvancedState::btnCancelClick);
-	_btnCancel->onKeyboardPress((ActionHandler)&OptionsAdvancedState::btnCancelClick, (SDLKey)Options::getInt("keyCancel"));
+	_btnCancel->onKeyboardPress((ActionHandler)&OptionsAdvancedState::btnCancelClick, (SDL_Keycode)Options::getInt("keyCancel"));
 	
 	_txtDescription->setColor(Palette::blockOffset(8)+10);
 	_txtDescription->setWordWrap(true);
@@ -110,17 +111,16 @@ OptionsAdvancedState::OptionsAdvancedState(Game *game, OptionsOrigin origin) : O
 	_settingBoolSet.push_back(std::pair<std::string, bool>("psiStrengthEval", false));
 	_settingBoolSet.push_back(std::pair<std::string, bool>("anytimePsiTraining", false));
 	_settingBoolSet.push_back(std::pair<std::string, bool>("skipNextTurnScreen", false));
+	_settingBoolSet.push_back(std::pair<std::string, bool>("battleShootPreview", false));
 
 	_boolQuantity = _settingBoolSet.size();
-	int sel = 0;
 	for (std::vector<std::pair<std::string, bool> >::iterator i = _settingBoolSet.begin(); i != _settingBoolSet.end(); ++i)
 	{
 		std::string settingName = (*i).first;
 		(*i).second = Options::getBool(settingName);
 		std::wstring setting =  (*i).second ? tr("STR_YES").c_str() : tr("STR_NO").c_str();
-		transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
+		std::transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
 		_lstOptions->addRow(2, tr("STR_" + settingName).c_str(), setting.c_str());
-		++sel;
 	}
 	
 	_settingIntSet.push_back(std::pair<std::string, int>("battleNewPreviewPath", 0));
@@ -130,20 +130,19 @@ OptionsAdvancedState::OptionsAdvancedState(Game *game, OptionsOrigin origin) : O
 
 	for (std::vector<std::pair<std::string, int> >::iterator i = _settingIntSet.begin(); i != _settingIntSet.end(); ++i)
 	{
-		std::string settingName = (*i).first;
-		(*i).second = Options::getInt(settingName);
+		std::string settingName = i->first;
+		i->second = Options::getInt(settingName);
 		std::wstringstream ss;
-		if (i->first == "battleNewPreviewPath")
+		if (settingName == "battleNewPreviewPath")
 		{
-			ss << updatePathString(sel - _settingBoolSet.size()).c_str();
+			ss << updatePathString(i->second).c_str();
 		}
 		else
 		{
 			ss << i->second;
 		}
-		transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
+		std::transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
 		_lstOptions->addRow(2, tr("STR_" + settingName).c_str(), ss.str().c_str());
-		++sel;
 	}
 
 	_lstOptions->setSelectable(true);
@@ -221,7 +220,7 @@ void OptionsAdvancedState::lstOptionsPress(Action *action)
 			{
 				_settingIntSet.at(intSel).second = 3;
 			}
-			ss << updatePathString(intSel).c_str();
+			ss << updatePathString(_settingIntSet.at(intSel).second).c_str();
 			break;
 		case 1: // explosion height
 			_settingIntSet.at(intSel).second += increment;
@@ -275,7 +274,7 @@ void OptionsAdvancedState::lstOptionsMouseOver(Action *)
 		settingName = _settingIntSet.at(sel - _boolQuantity).first;
 	}
 
-	transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
+	std::transform(settingName.begin(), settingName.end(), settingName.begin(), toupper);
 	ss << "STR_" << settingName.c_str() << "_DESC";
 	_txtDescription->setText(tr(ss.str()).c_str());
 }
@@ -287,7 +286,7 @@ void OptionsAdvancedState::lstOptionsMouseOut(Action *)
 
 std::wstring OptionsAdvancedState::updatePathString(int sel)
 {
-	switch (_settingIntSet.at(sel).second)
+	switch (sel)
 	{
 	case 0:
 		return tr("STR_NONE_UC");

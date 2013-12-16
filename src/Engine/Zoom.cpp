@@ -17,6 +17,7 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cassert>
 #include "Zoom.h"
 
 //#include "Scalers/hq2x.hpp"
@@ -26,8 +27,6 @@
 #include "Logger.h"
 #include "Options.h"
 #include "Screen.h"
-
-#include "OpenGL.h"
 
 // Scale2X
 #include "Scalers/scalebit.h"
@@ -599,6 +598,8 @@ bool Zoom::haveSSE2()
  */
 void Zoom::flipWithZoom(SDL_Surface *src, SDL_Surface *dst, int topBlackBand, int bottomBlackBand, int leftBlackBand, int rightBlackBand, OpenGL *glOut)
 {
+	assert (0 && "not implemented");
+#if 0
 	if (Screen::isOpenGLEnabled() && glOut->buffer_surface)
 	{
 		SDL_BlitSurface(src, 0, glOut->buffer_surface->getSurface(), 0); // TODO; this is less than ideal...
@@ -627,6 +628,7 @@ void Zoom::flipWithZoom(SDL_Surface *src, SDL_Surface *dst, int topBlackBand, in
 		SDL_BlitSurface(tmp, NULL, dst, &dstrect);
 		SDL_FreeSurface(tmp);
 	}
+#endif
 }
 
 

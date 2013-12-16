@@ -169,19 +169,19 @@ void ResearchInfoState::buildUi ()
 
 	_btnOk->setColor(Palette::blockOffset(13)+10);
 	_btnOk->onMouseClick((ActionHandler)&ResearchInfoState::btnOkClick);
-	_btnOk->onKeyboardPress((ActionHandler)&ResearchInfoState::btnOkClick, (SDLKey)Options::getInt("keyOk"));
+	_btnOk->onKeyboardPress((ActionHandler)&ResearchInfoState::btnOkClick, (SDL_Keycode)Options::getInt("keyOk"));
 	_btnCancel->setColor(Palette::blockOffset(13)+10);
 	if (_rule)
 	{
 		_btnOk->setText(tr("STR_START_PROJECT"));
 		_btnCancel->setText(tr("STR_CANCEL_UC"));
-		_btnCancel->onKeyboardPress((ActionHandler)&ResearchInfoState::btnCancelClick, (SDLKey)Options::getInt("keyCancel"));
+		_btnCancel->onKeyboardPress((ActionHandler)&ResearchInfoState::btnCancelClick, (SDL_Keycode)Options::getInt("keyCancel"));
 	}
 	else
 	{
 		_btnOk->setText(tr("STR_OK"));
 		_btnCancel->setText(tr("STR_CANCEL_PROJECT"));
-		_btnOk->onKeyboardPress((ActionHandler)&ResearchInfoState::btnOkClick, (SDLKey)Options::getInt("keyCancel"));
+		_btnOk->onKeyboardPress((ActionHandler)&ResearchInfoState::btnOkClick, (SDL_Keycode)Options::getInt("keyCancel"));
 	}
 	_btnCancel->onMouseClick((ActionHandler)&ResearchInfoState::btnCancelClick);
 }
@@ -229,8 +229,14 @@ void ResearchInfoState::setAssignedScientist()
  */
 void ResearchInfoState::handleWheel(Action *action)
 {
-	if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP) moreByValue(_changeValueByMouseWheel);
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN) lessByValue(_changeValueByMouseWheel);
+	const SDL_Event &ev(*action->getDetails());
+	if (ev.type == SDL_MOUSEWHEEL)
+	{
+		if (ev.wheel.y < 0)
+			moreByValue(_changeValueByMouseWheel);
+		else
+			lessByValue(_changeValueByMouseWheel);
+	}
 }
 
 /**
