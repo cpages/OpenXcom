@@ -155,7 +155,6 @@ void ScrollBar::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 void ScrollBar::handle(Action *action, State *state)
 {
 	InteractiveSurface::handle(action, state);
-	const SDL_Event &ev(*action->getDetails());
 	if (_pressed && (action->getDetails()->type == SDL_MOUSEMOTION || action->getDetails()->type == SDL_MOUSEBUTTONDOWN))
 	{
 		int cursorY = action->getAbsoluteYMouse();
@@ -189,12 +188,16 @@ void ScrollBar::blit(Surface *surface)
 void ScrollBar::mousePress(Action *action, State *state)
 {
 	InteractiveSurface::mousePress(action, state);
+	const SDL_Event &ev(*action->getDetails());
 	if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 		_pressed = true;
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELUP)
-		_list->scrollUp(false);
-	else if (action->getDetails()->button.button == SDL_BUTTON_WHEELDOWN)
-		_list->scrollDown(false);
+	else if (ev.type == SDL_MOUSEWHEEL)
+	{
+		if (ev.wheel.y < 0)
+			_list->scrollUp(false);
+		else
+			_list->scrollDown(false);
+	}
 }
 
 /**
