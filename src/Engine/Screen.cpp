@@ -320,15 +320,21 @@ void Screen::resetDisplay(bool resetVideo)
 	{
 		/* FIXME: leak? */
 		Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
+		/* commenting out hint, as using linear looks blurry */
+		//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+		SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 		if (SDL_CreateWindowAndRenderer(width, height, _flags, &_window,
 					&_renderer) != 0)
 		{
 			Log(LOG_ERROR) << SDL_GetError();
 			throw Exception(SDL_GetError());
 		}
+		SDL_RendererInfo renderInfo;
+		SDL_GetRendererInfo(_renderer, &renderInfo);
+		Options::vSyncForOpenGL =
+			(renderInfo.flags & SDL_RENDERER_PRESENTVSYNC) != 0;
 		_texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888,
 				SDL_TEXTUREACCESS_STREAMING, ORIGINAL_WIDTH, ORIGINAL_HEIGHT);
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 		SDL_RenderSetLogicalSize(_renderer, width, height);
 		Log(LOG_INFO) << "Display set to " << getWidth() << "x" << getHeight() << "x32";
 	}

@@ -327,18 +327,21 @@ void Game::run()
 		switch (runningState)
 		{
 			case RUNNING: 
-				if (Options::FPS > 0 && !(Options::useOpenGL && Options::vSyncForOpenGL))
+				if (!Options::vSyncForOpenGL)
 				{
-					_delaytime = (1000.0f / Options::FPS) - (SDL_GetTicks() - _framestarttime);
-					if (_delaytime > 0)
+					if (Options::FPS > 0)
 					{
-						SDL_Delay((Uint32)_delaytime);
+						_delaytime = (1000.0f / Options::FPS) - (SDL_GetTicks() - _framestarttime);
+						if (_delaytime > 0)
+						{
+							SDL_Delay((Uint32)_delaytime);
+						}
+						_framestarttime = SDL_GetTicks();
 					}
-					_framestarttime = SDL_GetTicks();
-				}
-				else
-				{
-					SDL_Delay(1); //Save CPU from going 100%
+					else
+					{
+						SDL_Delay(1); //Save CPU from going 100%
+					}
 				}
 				break;
 			case SLOWED: case PAUSED:
