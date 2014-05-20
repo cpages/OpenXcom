@@ -320,8 +320,10 @@ void Screen::resetDisplay(bool resetVideo)
 	if (!_window)
 	{
 		Log(LOG_INFO) << "Attempting to set display to " << width << "x" << height << "x" << _bpp << "...";
-		/* commenting out hint, as using linear looks blurry */
-		//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+#ifdef __ANDROID__
+		/* using linear in pc looks blurry */
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+#endif
 		SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 		if (SDL_CreateWindowAndRenderer(width, height, _flags, &_window,
 					&_renderer) != 0)
