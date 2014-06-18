@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -16,16 +16,35 @@
  * You should have received a copy of the GNU General Public License
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef ARESAME_H
-#define ARESAME_H
+#ifndef OPENXCOM_DELAYEDSAVESTATE_H
+#define OPENXCOM_DELAYEDSAVESTATE_H
 
-#include <limits>
-#include <cmath>
+#include "BattleState.h"
+#include "../Savegame/SavedGame.h"
 
-template <class _Tx>
-inline bool AreSame(const _Tx& l, const _Tx& r) {
-  return std::fabs(l-r) <= std::numeric_limits<_Tx>::epsilon();
+namespace OpenXcom
+{
+
+class BattlescapeGame;
+class Game;
+
+class DelayedSaveState : public BattleState
+{
+private:
+	Game *_game;
+	SaveType _type;
+	bool _firstRun;
+public:
+	/// Constructor for the delayed save state.
+	DelayedSaveState(BattlescapeGame *parent, Game *game, SaveType type);
+	/// Deletes the state.
+	~DelayedSaveState();
+	/// Initializes the state.
+	void init();
+	/// Runs state functionality every cycle.
+	void think();
+};
+
 }
 
 #endif
-

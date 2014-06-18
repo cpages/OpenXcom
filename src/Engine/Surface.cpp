@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -552,6 +552,24 @@ void Surface::drawRect(SDL_Rect *rect, Uint8 color)
 }
 
 /**
+ * Draws a filled rectangle on the surface.
+ * @param x X position in pixels.
+ * @param y Y position in pixels.
+ * @param w Width in pixels.
+ * @param h Height in pixels.
+ * @param color Color of the rectangle.
+ */
+void Surface::drawRect(Sint16 x, Sint16 y, Sint16 w, Sint16 h, Uint8 color)
+{
+	SDL_Rect rect;
+	rect.w = w;
+	rect.h = h;
+	rect.x = x;
+	rect.y = y;
+	SDL_FillRect(_surface, &rect, color);
+}
+
+/**
  * Draws a line on the surface.
  * @param x1 Start x coordinate in pixels.
  * @param y1 Start y coordinate in pixels.
@@ -680,7 +698,8 @@ SDL_Rect *Surface::getCrop()
  */
 void Surface::setPalette(SDL_Color *colors, int firstcolor, int ncolors)
 {
-	SDL_SetPaletteColors(_surface->format->palette, colors, firstcolor, ncolors);
+	if (_surface->format->BitsPerPixel == 8)
+		SDL_SetPaletteColors(_surface->format->palette, colors, firstcolor, ncolors);
 }
 
 /**
@@ -827,7 +846,7 @@ std::string Surface::getTooltip() const
 /**
 * Changes the help description of this surface,
 * for example for showing in tooltips.
-* @param str String ID.
+* @param tooltip String ID.
 */
 void Surface::setTooltip(const std::string &tooltip)
 {

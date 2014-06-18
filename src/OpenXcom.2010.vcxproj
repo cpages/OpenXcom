@@ -283,6 +283,7 @@
     <ClCompile Include="Battlescape\Projectile.cpp" />
     <ClCompile Include="Battlescape\ProjectileFlyBState.cpp" />
     <ClCompile Include="Battlescape\PromotionsState.cpp" />
+    <ClCompile Include="Battlescape\DelayedSaveState.cpp" />
     <ClCompile Include="Battlescape\ScannerState.cpp" />
     <ClCompile Include="Battlescape\ScannerView.cpp" />
     <ClCompile Include="Battlescape\UnitFallBState.cpp" />
@@ -500,7 +501,6 @@
     <ClCompile Include="Ufopaedia\UfopaediaStartState.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="aresame.h" />
     <ClInclude Include="Basescape\BaseInfoState.h" />
     <ClInclude Include="Basescape\BasescapeState.h" />
     <ClInclude Include="Basescape\BaseView.h" />
@@ -575,6 +575,7 @@
     <ClInclude Include="Battlescape\Projectile.h" />
     <ClInclude Include="Battlescape\ProjectileFlyBState.h" />
     <ClInclude Include="Battlescape\PromotionsState.h" />
+    <ClInclude Include="Battlescape\DelayedSaveState.h" />
     <ClInclude Include="Battlescape\ScannerState.h" />
     <ClInclude Include="Battlescape\ScannerView.h" />
     <ClInclude Include="Battlescape\UnitFallBState.h" />
@@ -593,6 +594,7 @@
     <ClInclude Include="Engine\Adlib\fmopl.h" />
     <ClInclude Include="Engine\CatFile.h" />
     <ClInclude Include="Engine\CrossPlatform.h" />
+    <ClInclude Include="Engine\DosFont.h" />
     <ClInclude Include="Engine\Exception.h" />
     <ClInclude Include="Engine\FastLineClip.h" />
     <ClInclude Include="Engine\Flc.h" />
@@ -629,6 +631,7 @@
     <ClInclude Include="Engine\SurfaceSet.h" />
     <ClInclude Include="Engine\Timer.h" />
     <ClInclude Include="Engine\Zoom.h" />
+    <ClInclude Include="fmath.h" />
     <ClInclude Include="Geoscape\AlienBaseState.h" />
     <ClInclude Include="Geoscape\AlienTerrorState.h" />
     <ClInclude Include="Geoscape\AllocatePsiTrainingState.h" />

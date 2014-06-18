@@ -4,14 +4,13 @@
 ;Includes
 
 	!include "MUI2.nsh"
-	!include "ZipDLL.nsh"
 	!include "x64.nsh"
 
 ;--------------------------------
 ;Defines
 
 	!define GAME_NAME "OpenXcom"
-	!define GAME_VERSION "0.9"
+	!define GAME_VERSION "1.0"
 	!define GAME_AUTHOR "OpenXcom Developers"	
 	
 ;--------------------------------
@@ -92,14 +91,22 @@
 ;Languages
 
 	!insertmacro MUI_LANGUAGE "English" ;first language is the default language
+	!insertmacro MUI_LANGUAGE "Czech"
 	!insertmacro MUI_LANGUAGE "French"
+	!insertmacro MUI_LANGUAGE "Finnish"
 	!insertmacro MUI_LANGUAGE "German"
-	!insertmacro MUI_LANGUAGE "Russian"
+	!insertmacro MUI_LANGUAGE "Hungarian"
+	!insertmacro MUI_LANGUAGE "Italian"
+	!insertmacro MUI_LANGUAGE "Portuguese"
 	!insertmacro MUI_LANGUAGE "PortugueseBR"
 	!insertmacro MUI_LANGUAGE "Polish"
 	!insertmacro MUI_LANGUAGE "Romanian"
+	!insertmacro MUI_LANGUAGE "Russian"
+	!insertmacro MUI_LANGUAGE "Slovak"
 	!insertmacro MUI_LANGUAGE "Spanish"
+	!insertmacro MUI_LANGUAGE "SpanishInternational"
 	!insertmacro MUI_LANGUAGE "Turkish"
+	!insertmacro MUI_LANGUAGE "Ukrainian"
 
 	!include "installerlang.nsh" ; Language strings
 
@@ -177,13 +184,9 @@ ${Else}
 	File "..\..\bin\Win32\Release\OpenXcom.exe"
 	File "..\..\bin\Win32\*.dll"
 ${EndIf}
-	File "..\..\COPYING"
+	File "..\..\LICENSE.txt"
 	File "..\..\CHANGELOG.txt"
 	File "..\..\README.txt"
-	
-	SetOutPath "$INSTDIR\data"
-	
-	File "..\..\bin\data\README.txt"
 	
 	;Copy UFO files
 	IfFileExists "$UFODIR\*.*" 0 ufo_no
@@ -209,39 +212,9 @@ ${EndIf}
 	
 	ufo_no:
 	
-	SetOutPath "$INSTDIR\data\Language"
+	SetOutPath "$INSTDIR\data"
 	
-	File "..\..\bin\data\Language\*.*"
-	
-	SetOutPath "$INSTDIR\data\Ruleset"
-	
-	File "..\..\bin\data\Ruleset\Xcom1Ruleset.rul"
-	File "..\..\bin\data\Ruleset\XcomUtil_*.rul"
-	File "..\..\bin\data\Ruleset\UFOextender_*.rul"
-	
-	SetOutPath "$INSTDIR\data\Resources\BulletSprites"
-	
-	File "..\..\bin\data\Resources\BulletSprites\*.*"
-	
-	SetOutPath "$INSTDIR\data\Resources\Pathfinding"
-	
-	File "..\..\bin\data\Resources\Pathfinding\*.*"
-	
-	SetOutPath "$INSTDIR\data\Resources\UI"
-	
-	File "..\..\bin\data\Resources\UI\*.*"
-	
-	SetOutPath "$INSTDIR\data\Resources\Weapons"
-	
-	File "..\..\bin\data\Resources\Weapons\*.*"
-	
-	SetOutPath "$INSTDIR\data\SoldierName"
-	
-	File "..\..\bin\data\SoldierName\*.*"
-	
-	SetOutPath "$INSTDIR\data\Shaders"
-	
-	File "..\..\bin\data\Shaders\*.*"
+	File /r "..\..\bin\data\*.*"
 
 	;Store installation folder
 	WriteRegStr HKLM "Software\${GAME_NAME}" "" $INSTDIR
@@ -287,10 +260,10 @@ Section "$(NAME_SecPatch)" SecPatch
 		Abort
 	success1:
 
-	;(uses ZipDLL.dll)
-	!insertmacro ZIPDLL_EXTRACT "$TEMP\universal-patch.zip" "$INSTDIR\data" "<ALL>"
+	;(uses nsisunz.dll)
+	nsisunz::UnzipToLog "$TEMP\universal-patch.zip" "$INSTDIR\data"
 	Pop $0
-	StrCmp $0 success success2
+	StrCmp $0 "success" success2
 		SetDetailsView show
 		DetailPrint "unzipping failed: $0"
 		Abort
@@ -344,24 +317,25 @@ Section "-un.Main"
 	
 	Delete "$INSTDIR\OpenXcom.exe"
 	Delete "$INSTDIR\*.dll"
-	Delete "$INSTDIR\COPYING"
+	Delete "$INSTDIR\LICENSE.txt"
 	Delete "$INSTDIR\README.txt"
 	Delete "$INSTDIR\CHANGELOG.txt"
 	
 	Delete "$INSTDIR\data\README.txt"
 	Delete "$INSTDIR\data\Language\*.*"
 	RMDir "$INSTDIR\data\Language"
-	Delete "..\..\bin\data\Ruleset\Xcom1Ruleset.rul"
-	Delete "..\..\bin\data\Ruleset\XcomUtil_*.rul"
-	Delete "..\..\bin\data\Ruleset\UFOextender_*.rul"
-	RMDir "$INSTDIR\Ruleset"
-	Delete "..\..\bin\data\Resources\BulletSprites\*.*"
+	Delete "$INSTDIR\data\Ruleset\Aliens_Pick_Up_Weapons.rul"
+	Delete "$INSTDIR\data\Ruleset\Xcom1Ruleset.rul"
+	Delete "$INSTDIR\data\Ruleset\XcomUtil_*.rul"
+	Delete "$INSTDIR\data\Ruleset\UFOextender_*.rul"
+	RMDir "$INSTDIR\data\Ruleset"
+	Delete "$INSTDIR\data\Resources\BulletSprites\*.*"
 	RMDir "$INSTDIR\data\Resources\BulletSprites"
-	Delete "..\..\bin\data\Resources\Pathfinding\*.*"
+	Delete "$INSTDIR\data\Resources\Pathfinding\*.*"
 	RMDir "$INSTDIR\data\Resources\Pathfinding"
-	Delete "..\..\bin\data\Resources\UI\*.*"
+	Delete "$INSTDIR\data\Resources\UI\*.*"
 	RMDir "$INSTDIR\data\Resources\UI"
-	Delete "..\..\bin\data\Resources\Weapons\*.*"
+	Delete "$INSTDIR\data\Resources\Weapons\*.*"
 	RMDir "$INSTDIR\data\Resources\Weapons"
 	Delete "$INSTDIR\data\SoldierName\*.*"
 	RMDir "$INSTDIR\data\SoldierName"

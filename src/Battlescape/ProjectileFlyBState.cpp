@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -279,9 +279,18 @@ void ProjectileFlyBState::init()
 bool ProjectileFlyBState::createNewProjectile()
 {
 	++_action.autoShotCounter;
-
+	
+	int bulletSprite = -1;
+	if (_action.type != BA_THROW)
+	{
+		bulletSprite = _ammo->getRules()->getBulletSprite();
+		if (bulletSprite == -1)
+		{
+			bulletSprite = _action.weapon->getRules()->getBulletSprite();
+		}
+	}
 	// create a new projectile
-	Projectile *projectile = new Projectile(_parent->getResourcePack(), _parent->getSave(), _action, _origin, _targetVoxel);
+	Projectile *projectile = new Projectile(_parent->getResourcePack(), _parent->getSave(), _action, _origin, _targetVoxel, bulletSprite);
 
 	// add the projectile on the map
 	_parent->getMap()->setProjectile(projectile);
@@ -420,6 +429,11 @@ void ProjectileFlyBState::think()
 			&& (hasFloor || unitCanFly))
 		{
 			createNewProjectile();
+			if (_action.cameraPosition.z != -1)
+			{
+				_parent->getMap()->getCamera()->setMapOffset(_action.cameraPosition);
+				_parent->getMap()->invalidate();
+			}
 		}
 		else
 		{
@@ -521,10 +535,15 @@ void ProjectileFlyBState::think()
 					if (_ammo && _ammo->getRules()->getShotgunPellets()  != 0)
 					{
 						int i = 1;
+						int bulletSprite = _ammo->getRules()->getBulletSprite();
+						if (bulletSprite == -1)
+						{
+							bulletSprite = _action.weapon->getRules()->getBulletSprite();
+						}
 						while (i != _ammo->getRules()->getShotgunPellets())
 						{
 							// create a projectile
-							Projectile *proj = new Projectile(_parent->getResourcePack(), _parent->getSave(), _action, _origin, _targetVoxel);
+							Projectile *proj = new Projectile(_parent->getResourcePack(), _parent->getSave(), _action, _origin, _targetVoxel, bulletSprite);
 							// let it trace to the point where it hits
 							_projectileImpact = proj->calculateTrajectory(std::max(0.0, (_unit->getFiringAccuracy(_action.type, _action.weapon) / 100.0) - i * 5.0));
 							if (_projectileImpact != V_EMPTY)
@@ -535,7 +554,7 @@ void ProjectileFlyBState::think()
 								if (_projectileImpact != V_OUTOFBOUNDS)
 								{
 									Explosion *explosion = new Explosion(proj->getPosition(1), _ammo->getRules()->getHitAnimation(), false, false);
-									_parent->getMap()->getExplosions()->insert(explosion);
+									_parent->getMap()->getExplosions()->push_back(explosion);
 									_parent->getSave()->getTileEngine()->hit(proj->getPosition(1), _ammo->getRules()->getPower(), _ammo->getRules()->getDamageType(), 0);
 								}
 								++i;
@@ -587,13 +606,16 @@ void ProjectileFlyBState::cancel()
 	{
 		_parent->getMap()->getProjectile()->skipTrajectory();
 		Position p = _parent->getMap()->getProjectile()->getPosition();
-		if (!_parent->getMap()->getCamera()->isOnScreen(Position(p.x/16, p.y/16, p.z/24)))
+		if (!_parent->getMap()->getCamera()->isOnScreen(Position(p.x/16, p.y/16, p.z/24), false))
 			_parent->getMap()->getCamera()->centerOnPosition(Position(p.x/16, p.y/16, p.z/24));
 	}
 }
 
 /**
  * Validates the throwing range.
+ * @param action Pointer to throw action.
+ * @param origin Position to throw from.
+ * @param target Tile to throw to.
  * @return True when the range is valid.
  */
 bool ProjectileFlyBState::validThrowRange(BattleAction *action, Position origin, Tile *target)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -79,6 +79,7 @@ private:
 	bool _mouseMovedOverThreshold;
 	bool _mouseOverIcons;
 	std::string _currentTooltip;
+	Position _cursorPosition;
 	float _scrollAccumX, _scrollAccumY;
 	bool _hasScrolled;
 	bool _swipeFromSoldier;
@@ -218,6 +219,8 @@ public:
 	void txtTooltipOut(Action *action);
 	/// Update the resolution settings, we just resized the window.
 	void resize(int &dX, int &dY);
+	/// Move the mouse back to where it started after we finish drag scrolling.
+	void stopScrolling(Action *action);
 	bool hasScrolled() const;
 };
 

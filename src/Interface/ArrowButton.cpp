@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -335,17 +335,17 @@ void ArrowButton::mousePress(Action *action, State *state)
 	ImageButton::mousePress(action, state);
 	if (_list != 0)
 	{
+		const SDL_Event &ev(*action->getDetails());
 		if (action->getDetails()->button.button == SDL_BUTTON_LEFT)
 		{
 			_timer->start();
 		}
-		const SDL_Event &ev(*action->getDetails());
-		if (ev.type == SDL_MOUSEWHEEL)
+		else if (ev.type == SDL_MOUSEWHEEL)
 		{
 			if (ev.wheel.y < 0)
-				_list->scrollUp(false);
+				_list->scrollUp(false, true);
 			else
-				_list->scrollDown(false);
+				_list->scrollDown(false, true);
 		}
 	}
 }

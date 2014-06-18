@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -29,7 +29,6 @@
 #include "../Engine/Sound.h"
 #include "../Resource/ResourcePack.h"
 #include "MainMenuState.h"
-#include "OptionsBaseState.h"
 
 namespace OpenXcom
 {
@@ -37,9 +36,14 @@ namespace OpenXcom
 /**
  * Initializes all the elements in the Intro screen.
  * @param game Pointer to the core game.
+ * @param wasLetterBoxed Was the game letterboxed?
  */
 IntroState::IntroState(Game *game, bool wasLetterBoxed) : State(game), _wasLetterBoxed(wasLetterBoxed)
-{	
+{
+	_oldMusic = Options::musicVolume;
+	_oldSound = Options::soundVolume;
+	Options::musicVolume = Options::soundVolume = std::max(_oldMusic, _oldSound);
+	_game->setVolume(Options::soundVolume, Options::musicVolume, -1);
 	_introFile = CrossPlatform::getDataFile("UFOINTRO/UFOINT.FLI");
 	_introSoundFileDOS = CrossPlatform::getDataFile("SOUND/INTRO.CAT");
 	_introSoundFileWin = CrossPlatform::getDataFile("SOUND/SAMPLE3.CAT");
@@ -331,8 +335,6 @@ static struct AudioSequence
 
 	void operator ()()
 	{
-	
-
 		while (Flc::flc.FrameCount >= introSoundTrack[trackPosition].frameNumber)
 		{
 			int command = introSoundTrack[trackPosition].sound;
@@ -435,7 +437,7 @@ void IntroState::init()
 				pal2[color].r = (((int)pal[color].r) * i) / 20;
 				pal2[color].g = (((int)pal[color].g) * i) / 20;
 				pal2[color].b = (((int)pal[color].b) * i) / 20;
-				pal2[color].a = 255;
+				pal2[color].a = pal[color].a;
 			}
 			_game->getScreen()->setPalette(pal2, 0, 256, true);
 			_game->getScreen()->flip();
@@ -443,7 +445,8 @@ void IntroState::init()
 		}
 		_game->getScreen()->clear();
 		_game->getScreen()->flip();
-
+		Options::musicVolume = _oldMusic;
+		Options::soundVolume = _oldSound;
 		_game->setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);
 
 #ifndef __NO_MUSIC
@@ -451,7 +454,7 @@ void IntroState::init()
 		Music::stop();
 #endif
 	}
-	OptionsBaseState::updateScale(Options::geoscapeScale, Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, true);
+	Screen::updateScale(Options::geoscapeScale, Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, true);
 	_game->getScreen()->resetDisplay(false);
 	_game->setState(new MainMenuState(_game));
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -46,7 +46,7 @@ namespace OpenXcom
 
 /**
  * Sets up a BattleAIState.
- * @param game Pointer to the game.
+ * @param save Pointer to the battle game.
  * @param unit Pointer to the unit.
  * @param node Pointer to the node the unit originates from.
  */
@@ -99,7 +99,7 @@ void AlienBAIState::load(const YAML::Node &node)
 
 /**
  * Saves the AI state to a YAML file.
- * @param out YAML emitter.
+ * @return YAML node.
  */
 YAML::Node AlienBAIState::save() const
 {
@@ -136,8 +136,7 @@ void AlienBAIState::exit()
 }
 
 /**
- * Runs any code the state needs to keep updating every
- * AI cycle.
+ * Runs any code the state needs to keep updating every AI cycle.
  * @param action (possible) AI action to execute after thinking is done.
  */
 void AlienBAIState::think(BattleAction *action)
@@ -1318,7 +1317,7 @@ void AlienBAIState::evaluateAIMode()
 	}
 
 	// generate a random number to represent our decision.
-	int decision = 1 + RNG::generate(0, patrolOdds + ambushOdds + escapeOdds + combatOdds);
+	int decision = RNG::generate(1, patrolOdds + ambushOdds + escapeOdds + combatOdds);
 
 	if (decision > escapeOdds)
 	{
@@ -1393,6 +1392,7 @@ void AlienBAIState::evaluateAIMode()
 /**
  * Find a position where we can see our target, and move there.
  * check the 11x11 grid for a position nearby where we can potentially target him.
+ * @return True if a possible position was found.
  */
 bool AlienBAIState::findFirePoint()
 {
@@ -1467,7 +1467,8 @@ bool AlienBAIState::findFirePoint()
  * @param attackingUnit The attacking unit.
  * @param radius How big the explosion will be.
  * @param diff Game difficulty.
- * @return True if it is worthwile creating an explosion in the target position.
+ * @param grenade Is the explosion coming from a grenade?
+ * @return True if it is worthwhile creating an explosion in the target position.
  */
 bool AlienBAIState::explosiveEfficacy(Position targetPos, BattleUnit *attackingUnit, int radius, int diff, bool grenade) const
 {
@@ -1488,35 +1489,51 @@ bool AlienBAIState::explosiveEfficacy(Position targetPos, BattleUnit *attackingU
 
 	int efficacy = desperation;
 
-	if (attackingUnit->getPosition().z == targetPos.z && distance <= radius)
+	// don't go kamikaze unless we're already doomed.
+	if (abs(attackingUnit->getPosition().z - targetPos.z) <= Options::battleExplosionHeight && distance <= radius)
 	{
 		efficacy -= 4;
 	}
+
 	// we don't want to ruin our own base, but we do want to ruin XCom's day.
 	if (_save->getMissionType() == "STR_ALIEN_BASE_ASSAULT") efficacy -= 3;
 	else if (_save->getMissionType() == "STR_BASE_DEFENSE" || _save->getMissionType() == "STR_TERROR_MISSION") efficacy += 3;
 
+	// allow difficulty to have its influence
+	efficacy += diff/2;
 
+	// account for the unit we're targetting
 	BattleUnit *target = _save->getTile(targetPos)->getUnit();
 	if (target)
 	{
 		++enemiesAffected;
 		++efficacy;
 	}
+
 	for (std::vector<BattleUnit*>::iterator i = _save->getUnits()->begin(); i != _save->getUnits()->end(); ++i)
 	{
+			// don't grenade dead guys
 		if (!(*i)->isOut() &&
+			// don't count ourself twice
 			(*i) != attackingUnit &&
+			// don't count the target twice
 			(*i) != target &&
-			(*i)->getPosition().z == targetPos.z &&
+			// don't count units that probably won't be affected cause they're out of range
+			abs((*i)->getPosition().z - targetPos.z) <= Options::battleExplosionHeight &&
 			_save->getTileEngine()->distance((*i)->getPosition(), targetPos) <= radius)
 		{
-			if ((*i)->getFaction() == FACTION_PLAYER && (*i)->getTurnsSinceSpotted() > _intelligence)
+				// don't count people who were already grenaded this turn
+			if ((*i)->getTile()->getDangerous() ||
+				// don't count units we don't know about
+				((*i)->getFaction() == FACTION_PLAYER && (*i)->getTurnsSinceSpotted() > _intelligence))
 				continue;
+
+			// trace a line from the grenade origin to the unit we're checking against
 			Position voxelPosA = Position ((targetPos.x * 16)+8, (targetPos.y * 16)+8, (targetPos.z * 24)+12);
 			Position voxelPosB = Position (((*i)->getPosition().x * 16)+8, ((*i)->getPosition().y * 16)+8, ((*i)->getPosition().z * 24)+12);
 			std::vector<Position> traj;
 			int collidesWith = _save->getTileEngine()->calculateLine(voxelPosA, voxelPosB, false, &traj, target, true, false, *i);
+
 			if (collidesWith == V_UNIT && traj.front() / Position(16,16,24) == (*i)->getPosition())
 			{
 				if ((*i)->getFaction() == FACTION_PLAYER)
@@ -1589,8 +1606,7 @@ void AlienBAIState::meleeAction()
 /**
  * Attempts to fire a waypoint projectile at an enemy we, or one of our teammates sees.
  *
- * Waypoint targetting: pick from any units currently spotted by our allies.
- * @param action Pointer to an action.
+ * Waypoint targeting: pick from any units currently spotted by our allies.
  */
 void AlienBAIState::wayPointAction()
 {
@@ -1664,8 +1680,7 @@ void AlienBAIState::wayPointAction()
 /**
  * Attempts to fire at an enemy we can see.
  *
- * Regular targetting: we can see an enemy, we have a gun, let's try to shoot.
- * @param action Pointer to an action.
+ * Regular targeting: we can see an enemy, we have a gun, let's try to shoot.
  */
 void AlienBAIState::projectileAction()
 {
@@ -1679,7 +1694,6 @@ void AlienBAIState::projectileAction()
 
 /**
  * Selects a fire method based on range, time units, and time units reserved for cover.
- * @param action Pointer to an action.
  */
 void AlienBAIState::selectFireMethod()
 {
@@ -1744,7 +1758,6 @@ void AlienBAIState::selectFireMethod()
 
 /**
  * Evaluates whether to throw a grenade at an enemy (or group of enemies) we can see.
- * @param action Pointer to an action.
  */
 void AlienBAIState::grenadeAction()
 {
@@ -1785,7 +1798,6 @@ void AlienBAIState::grenadeAction()
  * Psionic targetting: pick from any of the "exposed" units.
  * Exposed means they have been previously spotted, and are therefore "known" to the AI,
  * regardless of whether we can see them or not, because we're psychic.
- * @param action Pointer to an action.
  * @return True if a psionic attack is performed.
  */
 bool AlienBAIState::psiAction()
@@ -1890,7 +1902,6 @@ bool AlienBAIState::psiAction()
 
 /**
  * Performs a melee attack action.
- * @param action Pointer to an action.
  */
 void AlienBAIState::meleeAttack()
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -55,8 +55,9 @@ private:
 	bool _quit, _init;
 	FpsCounter *_fpsCounter;
 	bool _mouseActive;
-	unsigned int _framestarttime;
-	int _delaytime;
+	unsigned int _timeOfLastFrame;
+	int _timeUntilNextFrame;
+	static const double VOLUME_GRADIENT;
 
 public:
 	/// Creates a new game and initializes SDL.
@@ -69,6 +70,8 @@ public:
 	void quit();
 	/// Sets the game's audio volume.
 	void setVolume(int sound, int music, int ui);
+	/// Adjusts a linear volume level to an exponential one.
+	static double volumeExponent(int volume);
 	/// Gets the game's display screen.
 	Screen *getScreen() const;
 	/// Gets the game's cursor.

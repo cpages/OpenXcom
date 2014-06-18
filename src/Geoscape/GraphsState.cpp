@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,6 +17,7 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "GraphsState.h"
+#include <sstream>
 #include "../Engine/Game.h"
 #include "../Resource/ResourcePack.h"
 #include "../Engine/Palette.h"
@@ -35,7 +36,6 @@
 #include "../Savegame/SavedGame.h"
 #include "../Interface/TextList.h"
 #include "../Engine/Action.h"
-#include <sstream>
 #include "../Engine/Options.h"
 
 namespace OpenXcom
@@ -46,7 +46,7 @@ struct GraphButInfo
 	LocalizedText _name;
 	int _color;
 	bool _pushed;
-	GraphButInfo(const LocalizedText& name, int color): _name(name), _color(color), _pushed(false) {}
+	GraphButInfo(const LocalizedText& name, Uint8 color): _name(name), _color(color), _pushed(false) {}
 };
 /**
  * Initializes all the elements in the Graphs screen.
@@ -234,29 +234,20 @@ GraphsState::GraphsState(Game *game) : State(game), _butRegionsOffset(0), _butCo
 	}
 
 	// set up the grid
-	SDL_Rect current;
-	current.w = 188;
-	current.h = 127;
-	current.x = 125;
-	current.y = 49;
-	_bg->drawRect(&current, Palette::blockOffset(10));
+	_bg->drawRect(125, 49, 188, 127, Palette::blockOffset(10));
 
 	for (int grid = 0; grid !=5; ++grid)
 	{
-	current.w = 16 - (grid*2);
-	current.h = 13 - (grid*2);
 		for (int y = 50 + grid; y <= 163 + grid; y += 14)
 		{
-			current.y = y;
 			for (int x = 126 + grid; x <= 297 + grid; x += 17)
 			{
-				current.x = x;
 				Uint8 color = Palette::blockOffset(10)+grid+1;
 				if (grid == 4)
 				{
 					color = 0;
 				} 
-				_bg->drawRect(&current, color);
+				_bg->drawRect(x, y, 16 - (grid*2), 13 - (grid*2), color);
 			}
 		}
 	}
@@ -330,9 +321,20 @@ GraphsState::~GraphsState()
 	std::string graphRegionToggles = "";
 	std::string graphCountryToggles = "";
 	std::string graphFinanceToggles = "";
-	for (size_t i = 0; i < _regionToggles.size(); ++i) graphRegionToggles.push_back(_regionToggles[i]->_pushed ? '1' : '0');
-	for (size_t i = 0; i < _countryToggles.size(); ++i) graphCountryToggles.push_back(_countryToggles[i]->_pushed ? '1' : '0');
-	for (size_t i = 0; i < _financeToggles.size(); ++i) graphFinanceToggles.push_back(_financeToggles[i] ? '1' : '0');
+	for (size_t i = 0; i < _regionToggles.size(); ++i)
+	{
+		graphRegionToggles.push_back(_regionToggles[i]->_pushed ? '1' : '0');
+		delete _regionToggles[i];
+	}
+	for (size_t i = 0; i < _countryToggles.size(); ++i)
+	{
+		graphCountryToggles.push_back(_countryToggles[i]->_pushed ? '1' : '0');
+		delete _countryToggles[i];
+	}
+	for (size_t i = 0; i < _financeToggles.size(); ++i)
+	{
+		graphFinanceToggles.push_back(_financeToggles[i] ? '1' : '0');
+	}
 	_game->getSavedGame()->setGraphRegionToggles(graphRegionToggles);
 	_game->getSavedGame()->setGraphCountryToggles(graphCountryToggles);
 	_game->getSavedGame()->setGraphFinanceToggles(graphFinanceToggles);
@@ -348,7 +350,8 @@ void GraphsState::btnGeoscapeClick(Action *)
 }
 
 /**
- * Switches to the ufo country activity screen
+ * Switches to the UFO Region Activity screen.
+ * @param action Pointer to an action.
  */
 void GraphsState::btnUfoRegionClick(Action *)
 {
@@ -368,7 +371,8 @@ void GraphsState::btnUfoRegionClick(Action *)
 }
 
 /**
- * Switches to the ufo country activity screen
+ * Switches to the UFO Country activity screen.
+ * @param action Pointer to an action.
  */
 void GraphsState::btnUfoCountryClick(Action *)
 {
@@ -388,7 +392,8 @@ void GraphsState::btnUfoCountryClick(Action *)
 }
 
 /**
- * Switches to the xcom region activity screen
+ * Switches to the XCom Region activity screen.
+ * @param action Pointer to an action.
  */
 void GraphsState::btnXcomRegionClick(Action *)
 {
@@ -408,7 +413,8 @@ void GraphsState::btnXcomRegionClick(Action *)
 }
 
 /**
- * Switches to the xcom country activity screen
+ * Switches to the XCom Country activity screen.
+ * @param action Pointer to an action.
  */
 void GraphsState::btnXcomCountryClick(Action *)
 {
@@ -428,7 +434,8 @@ void GraphsState::btnXcomCountryClick(Action *)
 }
 
 /**
- * Switches to the income screen
+ * Switches to the Income screen.
+ * @param action Pointer to an action.
  */
 void GraphsState::btnIncomeClick(Action *)
 {
@@ -449,7 +456,8 @@ void GraphsState::btnIncomeClick(Action *)
 }
 
 /**
- * Switches to the finances screen
+ * Switches to the Finances screen.
+ * @param action Pointer to an action.
  */
 void GraphsState::btnFinanceClick(Action *)
 {
@@ -470,7 +478,8 @@ void GraphsState::btnFinanceClick(Action *)
 }
 
 /**
- * handles a click on a region button
+ * Handles a click on a region button.
+ * @param action Pointer to an action.
  */
 void GraphsState::btnRegionListClick(Action * action)
 {
@@ -492,7 +501,8 @@ void GraphsState::btnRegionListClick(Action * action)
 }
 
 /**
- * handles a click on a country button
+ * Handles a click on a country button.
+ * @param action Pointer to an action.
  */
 void GraphsState::btnCountryListClick(Action * action)
 {
@@ -514,7 +524,8 @@ void GraphsState::btnCountryListClick(Action * action)
 }
 
 /**
- * handles a click on a finances button
+ * handles a click on a finances button.
+ * @param action Pointer to an action.
  */
 void GraphsState::btnFinanceListClick(Action *action)
 {
@@ -578,6 +589,8 @@ void GraphsState::resetScreen()
 
 /**
  * updates the text on the vertical scale
+ * @param lowerLimit minimum value
+ * @param upperLimit maximum value
  */
 void GraphsState::updateScale(double lowerLimit, double upperLimit)
 {

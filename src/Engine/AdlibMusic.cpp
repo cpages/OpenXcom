@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -22,6 +22,7 @@
 #include "Exception.h"
 #include "Options.h"
 #include "Logger.h"
+#include "Game.h"
 #include "Adlib/fmopl.h"
 #include "Adlib/adlplayer.h"
 
@@ -36,6 +37,7 @@ std::map<int, int> AdlibMusic::delayRates;
 
 /**
  * Initializes a new music track.
+ * @param volume Music volume modifier (1.0 = 100%).
  */
 AdlibMusic::AdlibMusic(float volume) : Music(), _data(0), _size(0), _volume(volume)
 {
@@ -105,10 +107,10 @@ void AdlibMusic::load(const std::string &filename)
  * @param data Pointer to the music file in memory
  * @param size Size of the music file in bytes.
  */
-void AdlibMusic::load(const void *data, size_t size)
+void AdlibMusic::load(const void *data, int size)
 {
 	_data = (char*)data;
-	_size = size;
+	_size = (size_t)(size);
 }
 
 /**
@@ -122,8 +124,8 @@ void AdlibMusic::play(int loop) const
 	{
 		stop();
 		func_setup_music((unsigned char*)_data, _size);
-		func_set_music_volume(Options::musicVolume * _volume);
-		Mix_HookMusic(player, NULL);
+		func_set_music_volume(127 * _volume);
+		Mix_HookMusic(player, (void*)this);
 	}
 #endif
 }
@@ -139,6 +141,12 @@ void AdlibMusic::player(void *udata, Uint8 *stream, int len)
 #ifndef __NO_MUSIC
 	if (Options::musicVolume == 0)
 		return;
+	if (Options::musicAlwaysLoop && !func_is_music_playing())
+	{
+		AdlibMusic *music = (AdlibMusic*)udata;
+		music->play();
+		return;
+	}
 	while (len != 0)
 	{
 		if (!opl[0] || !opl[1])
@@ -146,8 +154,9 @@ void AdlibMusic::player(void *udata, Uint8 *stream, int len)
 		int i = std::min(delay, len);
 		if (i)
 		{
-			YM3812UpdateOne(opl[0], (INT16*)stream, i / 2, 2);
-			YM3812UpdateOne(opl[1], ((INT16*)stream) + 1, i / 2, 2);
+			float volume = Game::volumeExponent(Options::musicVolume);
+			YM3812UpdateOne(opl[0], (INT16*)stream, i / 2, 2, volume);
+			YM3812UpdateOne(opl[1], ((INT16*)stream) + 1, i / 2, 2, volume);
 			stream += i;
 			delay -= i;
 			len -= i;

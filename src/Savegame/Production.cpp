@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -32,7 +32,7 @@
 
 namespace OpenXcom
 {
-Production::Production (const RuleManufacture * rules, int amount) : _rules(rules), _amount(amount), _timeSpent(0), _engineers(0)
+Production::Production(const RuleManufacture * rules, int amount) : _rules(rules), _amount(amount), _infinite(false), _timeSpent(0), _engineers(0), _sell(false)
 {
 }
 
@@ -44,6 +44,16 @@ int Production::getAmountTotal () const
 void Production::setAmountTotal (int amount)
 {
 	_amount = amount;
+}
+
+bool Production::getInfiniteAmount () const
+{
+	return _infinite;
+}
+
+void Production::setInfiniteAmount (bool inf)
+{
+	_infinite = inf;
 }
 
 int Production::getTimeSpent () const
@@ -64,6 +74,16 @@ int Production::getAssignedEngineers() const
 void Production::setAssignedEngineers (int engineers)
 {
 	_engineers = engineers;
+}
+
+bool Production::getSellItems() const
+{
+	return _sell;
+}
+
+void Production::setSellItems (bool sell)
+{
+	_sell = sell;
 }
 
 bool Production::haveEnoughMoneyForOneMoreUnit(SavedGame * g)
@@ -128,7 +148,7 @@ productionProgress_e Production::step(Base * b, SavedGame * g, const Ruleset *r)
 								(*c)->setStatus("STR_REFUELLING");
 						}
 					}
-					if (Options::allowAutoSellProduction && getAmountTotal() == std::numeric_limits<int>::max())
+					if (getSellItems())
 						g->setFunds(g->getFunds() + (r->getItem(i->first)->getSellCost() * i->second));
 					else
 						b->getItems()->addItem(i->first, i->second);
@@ -146,7 +166,7 @@ productionProgress_e Production::step(Base * b, SavedGame * g, const Ruleset *r)
 		}
 		while (count < produced);
 	}
-	if (getAmountProduced () >= _amount) return PROGRESS_COMPLETE;
+	if (getAmountProduced () >= _amount && !getInfiniteAmount()) return PROGRESS_COMPLETE;
 	if (done < getAmountProduced ())
 	{
 		// We need to ensure that player has enough cash/item to produce a new unit
@@ -183,13 +203,25 @@ YAML::Node Production::save() const
 	node["assigned"] = getAssignedEngineers ();
 	node["spent"] = getTimeSpent ();
 	node["amount"] = getAmountTotal ();
+	node["infinite"] = getInfiniteAmount ();
+	if (getSellItems())
+		node["sell"] = getSellItems ();
 	return node;
 }
 
 void Production::load(const YAML::Node &node)
 {
-	setAssignedEngineers(node["assigned"].as<int>());
-	setTimeSpent(node["spent"].as<int>());
-	setAmountTotal(node["amount"].as<int>());
+	setAssignedEngineers(node["assigned"].as<int>(getAssignedEngineers()));
+	setTimeSpent(node["spent"].as<int>(getTimeSpent()));
+	setAmountTotal(node["amount"].as<int>(getAmountTotal()));
+	setInfiniteAmount(node["infinite"].as<bool>(getInfiniteAmount()));
+	setSellItems(node["sell"].as<bool>(getSellItems()));
+	// backwards compatiblity
+	if (getAmountTotal() == std::numeric_limits<int>::max())
+	{
+		setAmountTotal(999);
+		setInfiniteAmount(true);
+		setSellItems(true);
+	}
 }
 }

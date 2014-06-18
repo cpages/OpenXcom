@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -371,10 +371,11 @@ void BaseView::draw()
 			{
 				Surface *frame;
 
+				int outline = std::max((*i)->getRules()->getSize() * (*i)->getRules()->getSize(), 3);
 				if ((*i)->getBuildTime() == 0)
 					frame = _texture->getFrame((*i)->getRules()->getSpriteShape() + num);
 				else
-					frame = _texture->getFrame((*i)->getRules()->getSpriteShape() + num + 2 + (*i)->getRules()->getSize());
+					frame = _texture->getFrame((*i)->getRules()->getSpriteShape() + num + outline);
 
 				frame->setX(x * GRID_SIZE);
 				frame->setY(y * GRID_SIZE);

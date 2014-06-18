@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -231,6 +231,11 @@ void OptionsAdvancedState::lstOptionsClick(Action *action)
 		{
 			min = 0;
 			max = 120;
+		}
+		else if (i == &Options::mousewheelSpeed)
+		{
+			min = 1;
+			max = 7;
 		}
 		if (*i < min)
 		{

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -22,6 +22,7 @@
 #include "../Engine/CrossPlatform.h"
 #include "../Resource/ResourcePack.h"
 #include "../Engine/Language.h"
+#include "../Engine/Screen.h"
 #include "../Engine/Palette.h"
 #include "../Engine/Surface.h"
 #include "../Interface/Text.h"
@@ -60,6 +61,18 @@ namespace OpenXcom
 InventoryState::InventoryState(Game *game, bool tu, BattlescapeState *parent) : State(game), _tu(tu), _parent(parent)
 {
 	_battleGame = _game->getSavedGame()->getSavedBattle();
+
+	if (Options::maximizeInfoScreens)
+	{
+		Options::baseXResolution = Screen::ORIGINAL_WIDTH;
+		Options::baseYResolution = Screen::ORIGINAL_HEIGHT;
+		_game->getScreen()->resetDisplay(false);
+	}
+	else if (!_battleGame->getTileEngine())
+	{
+		Screen::updateScale(Options::battlescapeScale, Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, true);
+		_game->getScreen()->resetDisplay(false);
+	}
 
 	// Create objects
 	_bg = new Surface(320, 200, 0, 0);
@@ -175,7 +188,23 @@ InventoryState::InventoryState(Game *game, bool tu, BattlescapeState *parent) : 
  */
 InventoryState::~InventoryState()
 {
-
+	if (_battleGame->getTileEngine())
+	{
+		if (Options::maximizeInfoScreens)
+		{
+			Screen::updateScale(Options::battlescapeScale, Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, true);
+			_game->getScreen()->resetDisplay(false);
+		}
+		Tile *inventoryTile = _battleGame->getSelectedUnit()->getTile();
+		_battleGame->getTileEngine()->applyGravity(inventoryTile);
+		_battleGame->getTileEngine()->calculateTerrainLighting(); // dropping/picking up flares
+		_battleGame->getTileEngine()->recalculateFOV();
+	}
+	else
+	{
+		Screen::updateScale(Options::geoscapeScale, Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, true);
+		_game->getScreen()->resetDisplay(false);
+	}
 }
 
 /**
@@ -373,12 +402,6 @@ void InventoryState::btnOkClick(Action *)
 			}
 		}
 	}
-	if (_battleGame->getTileEngine())
-	{
-		_battleGame->getTileEngine()->applyGravity(inventoryTile);
-		_battleGame->getTileEngine()->calculateTerrainLighting(); // dropping/picking up flares
-		_battleGame->getTileEngine()->recalculateFOV();
-	}
 }
 
 /**
@@ -429,9 +452,8 @@ void InventoryState::btnNextClick(Action *)
  */
 void InventoryState::btnUnloadClick(Action *)
 {
-	if (_inv->getSelectedItem() != 0 && _inv->getSelectedItem()->getAmmoItem() != 0 && _inv->getSelectedItem()->needsAmmo())
+	if (_inv->unload())
 	{
-		_inv->unload();
 		_txtItem->setText(L"");
 		_txtAmmo->setText(L"");
 		_selAmmo->clear();

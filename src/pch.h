@@ -5,6 +5,7 @@
 //#define _CRTDBG_MAP_ALLOC
 //#include <stdlib.h>
 //#include <crtdbg.h>
+
 #ifndef __NO_OPENGL
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
@@ -69,15 +70,13 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include "./aresame.h"
+#include "./fmath.h"
 #include "./version.h"
 
 // uncomment to check memory leaks in VS
-//#ifdef _DEBUG
 //#ifndef DBG_NEW
 //#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
 //#define new DBG_NEW
-//#endif
 //#endif
 
 #include "./Engine/State.h"

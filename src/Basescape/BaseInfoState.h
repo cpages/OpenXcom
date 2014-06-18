@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -70,6 +70,8 @@ public:
 	void edtBaseChange(Action *action);
 	/// Handler for clicking the mini base view.
 	void miniClick(Action *action);
+	/// Handler for selecting bases.
+	void handleKeyPress(Action *action);
 	/// Handler for clicking the OK button.
 	void btnOkClick(Action *action);
 	/// Handler for clicking the Transfers button.

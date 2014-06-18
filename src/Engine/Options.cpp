@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -68,6 +68,7 @@ void create()
 	_info.push_back(OptionInfo("asyncBlit", &asyncBlit, true));
 	_info.push_back(OptionInfo("keyboardMode", (int*)&keyboardMode, KEYBOARD_ON));
 #endif
+
 	_info.push_back(OptionInfo("maxFrameSkip", &maxFrameSkip, 0));
 	_info.push_back(OptionInfo("traceAI", &traceAI, false));
 	_info.push_back(OptionInfo("baseXResolution", &baseXResolution, Screen::ORIGINAL_WIDTH));
@@ -135,19 +136,35 @@ void create()
 	_info.push_back(OptionInfo("geoDragScrollButton", &geoDragScrollButton, SDL_BUTTON_MIDDLE));
 	_info.push_back(OptionInfo("preferredMusic", (int*)&preferredMusic, MUSIC_AUTO));
 	_info.push_back(OptionInfo("preferredSound", (int*)&preferredSound, SOUND_AUTO));
+	_info.push_back(OptionInfo("musicAlwaysLoop", &musicAlwaysLoop, false));
 
 	// advanced options
 	_info.push_back(OptionInfo("playIntro", &playIntro, true, "STR_PLAYINTRO", "STR_GENERAL"));
 	_info.push_back(OptionInfo("autosave", &autosave, true, "STR_AUTOSAVE", "STR_GENERAL"));
 	_info.push_back(OptionInfo("newSeedOnLoad", &newSeedOnLoad, false, "STR_NEWSEEDONLOAD", "STR_GENERAL"));
+	_info.push_back(OptionInfo("mousewheelSpeed", &mousewheelSpeed, 3, "STR_MOUSEWHEEL_SPEED", "STR_GENERAL"));
 	_info.push_back(OptionInfo("changeValueByMouseWheel", &changeValueByMouseWheel, 0, "STR_CHANGEVALUEBYMOUSEWHEEL", "STR_GENERAL"));
-	_info.push_back(OptionInfo("dragScrollInvert", &dragScrollInvert, false, "STR_DRAGSCROLLINVERT", "STR_GENERAL")); // true drags away from the cursor, false drags towards (like a grab)
 
+// this should probably be any small screen touch-device, i don't know the defines for all of them so i'll cover android and IOS as i imagine they're more common
+#ifdef __ANDROID_API__
+	_info.push_back(OptionInfo("maximizeInfoScreens", &maximizeInfoScreens, true, "STR_MAXIMIZE_INFO_SCREENS", "STR_GENERAL"));
+#elif __APPLE__
+	// todo: ask grussel how badly i messed this up.
+	#include "TargetConditionals.h"
+	#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
+		_info.push_back(OptionInfo("maximizeInfoScreens", &maximizeInfoScreens, true, "STR_MAXIMIZE_INFO_SCREENS", "STR_GENERAL"));
+	#else
+		_info.push_back(OptionInfo("maximizeInfoScreens", &maximizeInfoScreens, false, "STR_MAXIMIZE_INFO_SCREENS", "STR_GENERAL"));
+	#endif
+#else
+	_info.push_back(OptionInfo("maximizeInfoScreens", &maximizeInfoScreens, false, "STR_MAXIMIZE_INFO_SCREENS", "STR_GENERAL"));
+#endif
+
+	_info.push_back(OptionInfo("geoDragScrollInvert", &geoDragScrollInvert, false, "STR_DRAGSCROLLINVERT", "STR_GEOSCAPE")); // true drags away from the cursor, false drags towards (like a grab)
 	_info.push_back(OptionInfo("aggressiveRetaliation", &aggressiveRetaliation, false, "STR_AGGRESSIVERETALIATION", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("customInitialBase", &customInitialBase, false, "STR_CUSTOMINITIALBASE", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("allowBuildingQueue", &allowBuildingQueue, false, "STR_ALLOWBUILDINGQUEUE", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("craftLaunchAlways", &craftLaunchAlways, false, "STR_CRAFTLAUNCHALWAYS", "STR_GEOSCAPE"));
-	_info.push_back(OptionInfo("allowAutoSellProduction", &allowAutoSellProduction, false, "STR_ALLOWAUTOSELLPRODUCTION", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("storageLimitsEnforced", &storageLimitsEnforced, false, "STR_STORAGELIMITSENFORCED", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("canSellLiveAliens", &canSellLiveAliens, false, "STR_CANSELLLIVEALIENS", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("anytimePsiTraining", &anytimePsiTraining, false, "STR_ANYTIMEPSITRAINING", "STR_GEOSCAPE"));
@@ -157,7 +174,8 @@ void create()
 	_info.push_back(OptionInfo("canManufactureMoreItemsPerHour", &canManufactureMoreItemsPerHour, false, "STR_CANMANUFACTUREMOREITEMSPERHOUR", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("spendResearchedItems", &spendResearchedItems, false, "STR_SPENDRESEARCHEDITEMS", "STR_GEOSCAPE"));
 	_info.push_back(OptionInfo("fieldPromotions", &fieldPromotions, false, "STR_FIELDPROMOTIONS", "STR_GEOSCAPE"));
-
+	
+	_info.push_back(OptionInfo("battleDragScrollInvert", &battleDragScrollInvert, false, "STR_DRAGSCROLLINVERT", "STR_BATTLESCAPE")); // true drags away from the cursor, false drags towards (like a grab)
 	_info.push_back(OptionInfo("sneakyAI", &sneakyAI, false, "STR_SNEAKYAI", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo("battleUFOExtenderAccuracy", &battleUFOExtenderAccuracy, false, "STR_BATTLEUFOEXTENDERACCURACY", "STR_BATTLESCAPE"));
 	_info.push_back(OptionInfo("showMoreStatsInInventoryView", &showMoreStatsInInventoryView, false, "STR_SHOWMORESTATSININVENTORYVIEW", "STR_BATTLESCAPE"));
@@ -309,10 +327,14 @@ void loadArgs(int argc, char *argv[])
 				{
 					_userFolder = CrossPlatform::endPath(argv[i+1]);
 				}
+				else if (argname == "cfg")
+				{
+					_configFolder = CrossPlatform::endPath(argv[i+1]);
+				}
 				else
 				{
 					//save this command line option for now, we will apply it later
-					_commandLine[argname]= argv[i+1];
+					_commandLine[argname] = argv[i+1];
 				}
 			}
 			else
@@ -337,6 +359,8 @@ bool showHelp(int argc, char *argv[])
 	help << "        use PATH as the default Data Folder instead of auto-detecting" << std::endl << std::endl;
 	help << "-user PATH" << std::endl;
 	help << "        use PATH as the default User Folder instead of auto-detecting" << std::endl << std::endl;
+	help << "-cfg PATH" << std::endl;
+	help << "        use PATH as the default Config Folder instead of auto-detecting" << std::endl << std::endl;
 	help << "-KEY VALUE" << std::endl;
 	help << "        set option KEY to VALUE instead of default/loaded value (eg. -displayWidth 640)" << std::endl << std::endl;
 	help << "-help" << std::endl;
@@ -450,7 +474,7 @@ void setFolders()
 }
 
 /**
- * Updates the game's options with those in the configuation
+ * Updates the game's options with those in the configuration
  * file, if it exists yet, and any supplied on the command line.
  */
 void updateOptions()
@@ -458,13 +482,13 @@ void updateOptions()
 	// Load existing options
 	if (CrossPlatform::folderExists(_configFolder))
 	{
-		try
+		if (CrossPlatform::fileExists(_configFolder + "options.cfg"))
 		{
 			load();
 		}
-		catch (YAML::Exception &e)
+		else
 		{
-			Log(LOG_ERROR) << e.what();
+			save();
 		}
 	}
 	// Create config folder and save options
@@ -523,19 +547,26 @@ void save(const std::string &filename)
 		Log(LOG_WARNING) << "Failed to save " << filename << ".cfg";
 		return;
 	}
-	YAML::Emitter out;
-
-	YAML::Node doc, node;
-	for (std::vector<OptionInfo>::iterator i = _info.begin(); i != _info.end(); ++i)
+	try
 	{
-		i->save(node);
-	}
-	doc["options"] = node;
-	doc["purchaseexclusions"] = purchaseExclusions;
-	doc["rulesets"] = rulesets;
-	out << doc;
+		YAML::Emitter out;
 
-	sav << out.c_str();
+		YAML::Node doc, node;
+		for (std::vector<OptionInfo>::iterator i = _info.begin(); i != _info.end(); ++i)
+		{
+			i->save(node);
+		}
+		doc["options"] = node;
+		doc["purchaseexclusions"] = purchaseExclusions;
+		doc["rulesets"] = rulesets;
+		out << doc;
+
+		sav << out.c_str();
+	}
+	catch (YAML::Exception e)
+	{
+		Log(LOG_WARNING) << e.what();
+	}
 	sav.close();
 }
 

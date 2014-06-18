@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -19,7 +19,7 @@
 #define _USE_MATH_DEFINES
 #include "MovingTarget.h"
 #include <cmath>
-#include "../aresame.h"
+#include "../fmath.h"
 
 namespace OpenXcom
 {

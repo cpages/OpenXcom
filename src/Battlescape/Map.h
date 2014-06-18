@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -61,7 +61,7 @@ private:
 	int _animFrame;
 	Projectile *_projectile;
 	bool _projectileInFOV;
-	std::set<Explosion *> _explosions;
+	std::list<Explosion *> _explosions;
 	bool _explosionInFOV, _launch;
 	BattlescapeMessage *_message;
 	Camera *_camera;
@@ -75,6 +75,7 @@ private:
 	int getTerrainLevel(Position pos, int size);
 public:
 	static const int ICON_HEIGHT = 56;
+	static const int ICON_WIDTH = 320;
 	/// Creates a new map at the specified position and size.
 	Map(Game *game, int width, int height, int x, int y, int visibleMapHeight);
 	/// Cleans up the map.
@@ -119,7 +120,7 @@ public:
 	/// Gets projectile.
 	Projectile *getProjectile() const;
 	/// Gets explosion set.
-	std::set<Explosion*> *getExplosions();
+	std::list<Explosion*> *getExplosions();
 	/// Gets the pointer to the camera.
 	Camera *getCamera();
 	/// Mouse-scrolls the camera.
@@ -138,6 +139,8 @@ public:
 	void setHeight(int height);
 	/// Special handling for updating map width.
 	void setWidth(int width);
+	/// Get the vertical position of the hidden movement screen.
+	int getMessageY();
 };
 
 }

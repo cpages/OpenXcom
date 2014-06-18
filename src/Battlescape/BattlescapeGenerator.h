@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -62,7 +62,7 @@ private:
 	Tile *_craftInventoryTile;
 	std::string _alienRace;
 	int _alienItemLevel;
-	bool _allowAutoLoadout;
+	bool _allowAutoLoadout, _baseInventory;
 	int _craftX, _craftY, _craftZ;
 
 	/// Generates a new battlescape map.
@@ -128,6 +128,8 @@ public:
 	bool placeUnitNearFriend(BattleUnit *unit);
 	/// Generates an inventory battlescape.
 	void runInventory(Craft *craft);
+	/// Load all Xcom weapons.
+	void loadWeapons();
 };
 
 }

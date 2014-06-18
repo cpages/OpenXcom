@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -39,28 +39,26 @@ private:
 	static const std::wstring musFormats[], sndFormats[];
 	Text *_txtMusicVolume, *_txtSoundVolume, *_txtUiVolume;
 	Slider *_slrMusicVolume, *_slrSoundVolume, *_slrUiVolume;
-	Text *_txtBitDepth, *_txtSampleRate;
-	ComboBox *_cbxBitDepth, *_cbxSampleRate;
+	Text *_txtSampleRate;
+	ComboBox *_cbxSampleRate;
 	Text *_txtMusicFormat, *_txtCurrentMusic, *_txtSoundFormat, *_txtCurrentSound;
 	ComboBox *_cbxMusicFormat, *_cbxSoundFormat;
-	std::vector<int> _bitDepths, _sampleRates;
+	std::vector<int> _sampleRates;
 public:
 	/// Creates the Audio Options state.
 	OptionsAudioState(Game *game, OptionsOrigin origin);
 	/// Cleans up the Audio Options state.
 	~OptionsAudioState();
 	/// Handler for changing the music slider.
-	void slrMusicVolumeChange(Action *);
+	void slrMusicVolumeChange(Action *action);
 	/// Handler for changing the sound slider.
-	void slrSoundVolumeChange(Action *);
+	void slrSoundVolumeChange(Action *action);
 	/// Handler for sound slider button release.
-	void slrSoundVolumeRelease(Action *);
+	void slrSoundVolumeRelease(Action *action);
     /// Handler for changing the sound slider.
-    void slrUiVolumeChange(Action *);
+    void slrUiVolumeChange(Action *action);
 	/// Handler for sound slider button release.
-    void slrUiVolumeRelease(Action *);
-	/// Handler for changing the Bit Depth combobox.
-	void cbxBitDepthChange(Action *action);
+    void slrUiVolumeRelease(Action *action);
     /// Handler for changing the Sample Rate combobox.
 	void cbxSampleRateChange(Action *action);
 	/// Handler for changing the Music Format combobox.

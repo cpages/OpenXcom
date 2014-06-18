@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -45,30 +45,30 @@ OptionsBattlescapeState::OptionsBattlescapeState(Game *game, OptionsOrigin origi
 
 	// Create objects
 	_txtEdgeScroll = new Text(114, 9, 94, 8);
-	_cbxEdgeScroll = new ComboBox(this, 100, 16, 94, 18);
+	_cbxEdgeScroll = new ComboBox(this, 104, 16, 94, 18);
 
-	_txtDragScroll = new Text(114, 9, 210, 8);
-	_cbxDragScroll = new ComboBox(this, 100, 16, 210, 18);
+	_txtDragScroll = new Text(114, 9, 206, 8);
+	_cbxDragScroll = new ComboBox(this, 104, 16, 206, 18);
 
 	_txtScrollSpeed = new Text(114, 9, 94, 40);
-	_slrScrollSpeed = new Slider(100, 16, 94, 50);
+	_slrScrollSpeed = new Slider(104, 16, 94, 50);
 
-	_txtFireSpeed = new Text(114, 9, 210, 40);
-	_slrFireSpeed = new Slider(100, 16, 210, 50);
+	_txtFireSpeed = new Text(114, 9, 206, 40);
+	_slrFireSpeed = new Slider(104, 16, 206, 50);
 
 	_txtXcomSpeed = new Text(114, 9, 94, 72);
-	_slrXcomSpeed = new Slider(100, 16, 94, 82);
+	_slrXcomSpeed = new Slider(104, 16, 94, 82);
 
-	_txtAlienSpeed = new Text(114, 9, 210, 72);
-	_slrAlienSpeed = new Slider(100, 16, 210, 82);
+	_txtAlienSpeed = new Text(114, 9, 206, 72);
+	_slrAlienSpeed = new Slider(104, 16, 206, 82);
 
 	_txtPathPreview = new Text(114, 9, 94, 100);
-	_btnArrows = new ToggleTextButton(100, 16, 94, 110);
-	_btnTuCost = new ToggleTextButton(100, 16, 94, 128);
+	_btnArrows = new ToggleTextButton(104, 16, 94, 110);
+	_btnTuCost = new ToggleTextButton(104, 16, 94, 128);
 
-	_txtOptions = new Text(114, 9, 210, 100);
-	_btnTooltips = new ToggleTextButton(100, 16, 210, 110);
-	_btnDeaths = new ToggleTextButton(100, 16, 210, 128);
+	_txtOptions = new Text(114, 9, 206, 100);
+	_btnTooltips = new ToggleTextButton(104, 16, 206, 110);
+	_btnDeaths = new ToggleTextButton(104, 16, 206, 128);
 
 	add(_txtEdgeScroll);
 	add(_txtDragScroll);
@@ -103,7 +103,7 @@ OptionsBattlescapeState::OptionsBattlescapeState(Game *game, OptionsOrigin origi
 	_txtEdgeScroll->setText(tr("STR_EDGE_SCROLL"));
 
 	std::vector<std::string> edgeScrolls;
-	edgeScrolls.push_back("STR_NONE");
+	edgeScrolls.push_back("STR_DISABLED");
 	edgeScrolls.push_back("STR_TRIGGER_SCROLL");
 	edgeScrolls.push_back("STR_AUTO_SCROLL");
 
@@ -119,7 +119,7 @@ OptionsBattlescapeState::OptionsBattlescapeState(Game *game, OptionsOrigin origi
 	_txtDragScroll->setText(tr("STR_DRAG_SCROLL"));
 	
 	std::vector<std::string> dragScrolls;
-	dragScrolls.push_back("STR_NONE");
+	dragScrolls.push_back("STR_DISABLED");
 	dragScrolls.push_back("STR_LEFT_MOUSE_BUTTON");
 	dragScrolls.push_back("STR_MIDDLE_MOUSE_BUTTON");
 	dragScrolls.push_back("STR_RIGHT_MOUSE_BUTTON");

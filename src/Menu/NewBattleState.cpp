@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -19,6 +19,7 @@
 #include "NewBattleState.h"
 #include <cmath>
 #include <fstream>
+#include <algorithm>
 #include <yaml-cpp/yaml.h>
 #include "../Engine/Game.h"
 #include "../Resource/ResourcePack.h"
@@ -282,13 +283,14 @@ void NewBattleState::load(const std::string &filename)
 	try
 	{
 		YAML::Node doc = YAML::LoadFile(s);
-		_cbxMission->setSelected(doc["mission"].as<int>(0));
-		_cbxCraft->setSelected(doc["craft"].as<int>(0));
-		_slrDarkness->setValue(doc["darkness"].as<int>(0));
-		_cbxTerrain->setSelected(doc["terrain"].as<int>(0));
-		_cbxAlienRace->setSelected(doc["alienRace"].as<int>(0));
-		_cbxDifficulty->setSelected(doc["difficulty"].as<int>(0));
-		_slrAlienTech->setValue(doc["alienTech"].as<int>(0));
+		_cbxMission->setSelected(std::min(doc["mission"].as<size_t>(0), _missionTypes.size()-1));
+		_cbxCraft->setSelected(std::min(doc["craft"].as<size_t>(0), _crafts.size()-1));
+		_slrDarkness->setValue(doc["darkness"].as<size_t>(0));
+		_cbxTerrain->setSelected(std::min(doc["terrain"].as<size_t>(0), _terrainTypes.size()-1));
+		_cbxAlienRace->setSelected(std::min(doc["alienRace"].as<size_t>(0), _alienRaces.size()-1));
+		_cbxDifficulty->setSelected(doc["difficulty"].as<size_t>(0));
+		_slrAlienTech->setValue(doc["alienTech"].as<size_t>(0));
+		cbxMissionChange(NULL);
 
 		if (doc["base"])
 		{
@@ -479,6 +481,7 @@ void NewBattleState::btnOkClick(Action *)
 		_craft->setDestination(t);
 		bgen.setTerrorSite(t);
 		bgen.setCraft(_craft);
+		_game->getSavedGame()->getTerrorSites()->push_back(t);
 	}
 	else if (_missionTypes[_cbxMission->getSelected()] == "STR_BASE_DEFENSE")
 	{
@@ -491,6 +494,7 @@ void NewBattleState::btnOkClick(Action *)
 		_craft->setDestination(b);
 		bgen.setAlienBase(b);
 		bgen.setCraft(_craft);
+		_game->getSavedGame()->getAlienBases()->push_back(b);
 	}
 	else if (_missionTypes[_cbxMission->getSelected()] == "STR_MARS_CYDONIA_LANDING" || _missionTypes[_cbxMission->getSelected()] == "STR_MARS_THE_FINAL_ASSAULT")
 	{
@@ -512,6 +516,7 @@ void NewBattleState::btnOkClick(Action *)
 			bgame->setMissionType("STR_UFO_GROUND_ASSAULT");
 		else
 			bgame->setMissionType("STR_UFO_CRASH_RECOVERY");
+		_game->getSavedGame()->getUfos()->push_back(u);
 	}
 	if (_craft)
 		_craft->setSpeed(0);
@@ -559,6 +564,8 @@ void NewBattleState::btnRandomClick(Action *)
 	_cbxAlienRace->setSelected(RNG::generate(0, _alienRaces.size()-1));
 	_cbxDifficulty->setSelected(RNG::generate(0, 4));
 	_slrAlienTech->setValue(RNG::generate(0, _game->getRuleset()->getAlienItemLevels().size()-1));
+	cbxMissionChange(0);
+	cbxCraftChange(0);
 
 	initSave();
 }
@@ -593,6 +600,19 @@ void NewBattleState::cbxMissionChange(Action *)
 void NewBattleState::cbxCraftChange(Action *)
 {
 	_craft->setRules(_game->getRuleset()->getCraft(_crafts[_cbxCraft->getSelected()]));
+	int current = _craft->getNumSoldiers();
+	int max = _craft->getRules()->getSoldiers();
+	if (current > max)
+	{
+		for (std::vector<Soldier*>::reverse_iterator i = _craft->getBase()->getSoldiers()->rbegin(); i != _craft->getBase()->getSoldiers()->rend() && current > max; ++i)
+		{
+			if ((*i)->getCraft() == _craft)
+			{
+				(*i)->setCraft(0);
+				current--;
+			}
+		}
+	}
 }
 
 }

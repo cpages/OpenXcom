@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -17,14 +17,9 @@
  * along with OpenXcom.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Game.h"
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <SDL_syswm.h>
-#endif
+#include <cmath>
 #include <sstream>
 #include <SDL_mixer.h>
-#include <SDL_image.h>
 #include "Adlib/adlplayer.h"
 #include "State.h"
 #include "Screen.h"
@@ -44,17 +39,18 @@
 #include "Options.h"
 #include "CrossPlatform.h"
 #include "../Menu/TestState.h"
-#include "../Menu/OptionsBaseState.h"
 
 namespace OpenXcom
 {
+
+const double Game::VOLUME_GRADIENT = 10.0;
 
 /**
  * Starts up SDL with all the subsystems and SDL_mixer for audio processing,
  * creates the display screen and sets up the cursor.
  * @param title Title of the game window.
  */
-Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states(), _deleted(), _res(0), _save(0), _rules(0), _quit(false), _init(false), _mouseActive(true)
+Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states(), _deleted(), _res(0), _save(0), _rules(0), _quit(false), _init(false), _mouseActive(true), _timeUntilNextFrame(0)
 {
 	Options::reload = false;
 	Options::mute = false;
@@ -82,26 +78,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states
 	//SDL_WM_GrabInput(Options::captureMouse);
 	
 	// Set the window icon
-#ifdef _WIN32
-	HINSTANCE handle = GetModuleHandle(NULL);
-	HICON icon = LoadIcon(handle, MAKEINTRESOURCE(103));
-
-	SDL_SysWMinfo wminfo;
-	SDL_VERSION(&wminfo.version)
-	if (SDL_GetWMInfo(&wminfo))
-	{
-		HWND hwnd = wminfo.window;
-		SetClassLongPtr(hwnd, GCLP_HICON, (LONG_PTR)icon);
-	}
-#else
-	SDL_Surface *icon = IMG_Load(CrossPlatform::getDataFile("openxcom.png").c_str());
-	if (icon != 0)
-	{
-		/* FIXME: replace this */
-		//SDL_WM_SetIcon(icon, NULL);
-		SDL_FreeSurface(icon);
-	}
-#endif
+	CrossPlatform::setWindowIcon(103, "openxcom.png");
 
 	// Set the window caption
 	/* SDL_WM_SetCaption(title.c_str(), 0); FIXME */
@@ -124,7 +101,7 @@ Game::Game(const std::string &title) : _screen(0), _cursor(0), _lang(0), _states
 	// Create blank language
 	_lang = new Language();
 
-	_framestarttime = 0;
+	_timeOfLastFrame = 0;
 }
 
 /**
@@ -145,8 +122,8 @@ Game::~Game()
 	delete _cursor;
 	delete _lang;
 	delete _res;
-	delete _rules;
 	delete _save;
+	delete _rules;
 	delete _screen;
 	delete _fpsCounter;
 
@@ -239,8 +216,8 @@ void Game::run()
 							Options::newDisplayWidth = Options::displayWidth = std::max(Screen::ORIGINAL_WIDTH, _event.resize.w);
 							Options::newDisplayHeight = Options::displayHeight = std::max(Screen::ORIGINAL_HEIGHT, _event.resize.h);
 							int dX = 0, dY = 0;
-							OptionsBaseState::updateScale(Options::battlescapeScale, Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, false);
-							OptionsBaseState::updateScale(Options::geoscapeScale, Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, false);
+							Screen::updateScale(Options::battlescapeScale, Options::battlescapeScale, Options::baseXBattlescape, Options::baseYBattlescape, false);
+							Screen::updateScale(Options::geoscapeScale, Options::geoscapeScale, Options::baseXGeoscape, Options::baseYGeoscape, false);
 							for (std::list<State*>::iterator i = _states.begin(); i != _states.end(); ++i)
 							{
 								(*i)->resize(dX, dY);
@@ -272,32 +249,53 @@ void Game::run()
 					_cursor->handle(&action);
 					_fpsCounter->handle(&action);
 					_states.back()->handle(&action);
-					if (action.getDetails()->type == SDL_KEYDOWN && Options::debug)
+					if (action.getDetails()->type == SDL_KEYDOWN)
 					{
-						if (action.getDetails()->key.keysym.sym == SDLK_t && (SDL_GetModState() & KMOD_CTRL) != 0)
+						// "ctrl-g" grab input
+						if (action.getDetails()->key.keysym.sym == SDLK_g && (SDL_GetModState() & KMOD_CTRL) != 0)
 						{
-							setState(new TestState(this));
+							Options::captureMouse = (SDL_GrabMode)(!Options::captureMouse);
+							SDL_WM_GrabInput(Options::captureMouse);
 						}
-						// "ctrl-u" debug UI
-						else if (action.getDetails()->key.keysym.sym == SDLK_u && (SDL_GetModState() & KMOD_CTRL) != 0)
+						else if (Options::debug)
 						{
-							Options::debugUi = !Options::debugUi;
-							_states.back()->redrawText();
+							if (action.getDetails()->key.keysym.sym == SDLK_t && (SDL_GetModState() & KMOD_CTRL) != 0)
+							{
+								setState(new TestState(this));
+							}
+							// "ctrl-u" debug UI
+							else if (action.getDetails()->key.keysym.sym == SDLK_u && (SDL_GetModState() & KMOD_CTRL) != 0)
+							{
+								Options::debugUi = !Options::debugUi;
+								_states.back()->redrawText();
+							}
 						}
 					}
 					break;
 			}
 		}
-
+		
 		// Process rendering
 		if (runningState != PAUSED)
 		{
 			// Process logic
-			_fpsCounter->think();
 			_states.back()->think();
-
-			if (_init)
+			_fpsCounter->think();
+			if (Options::FPS > 0 && !(Options::useOpenGL && Options::vSyncForOpenGL))
 			{
+				// Update our FPS delay time based on the time of the last draw.
+				_timeUntilNextFrame = (1000.0f / Options::FPS) - (SDL_GetTicks() - _timeOfLastFrame);
+			}
+			else
+			{
+				_timeUntilNextFrame = 0;
+			}
+
+			if (_init && _timeUntilNextFrame <= 0)
+			{
+				// make a note of when this frame update occured.
+				_timeOfLastFrame = SDL_GetTicks();
+				_fpsCounter->addFrame();
 				_screen->clear();
 				std::list<State*>::iterator i = _states.end();
 				do
@@ -312,28 +310,8 @@ void Game::run()
 				}
 				_fpsCounter->blit(_screen->getSurface());
 				_cursor->blit(_screen->getSurface());
+				_screen->flip();
 			}
-			_screen->flip();
-		}		
-
-		// Initialize active state
-		if (!_init)
-		{
-			_init = true;
-			_states.back()->init();
-
-			// Unpress buttons
-			_states.back()->resetAll();
-
-			// Refresh mouse position
-			SDL_Event ev;
-			int x, y;
-			SDL_GetMouseState(&x, &y);
-			ev.type = SDL_MOUSEMOTION;
-			ev.motion.x = x;
-			ev.motion.y = y;
-			Action action = Action(&ev, _screen->getXScale(), _screen->getYScale(), _screen->getCursorTopBlackBand(), _screen->getCursorLeftBlackBand());
-			_states.back()->handle(&action);
 		}
 
 		// Save on CPU
@@ -392,21 +370,27 @@ void Game::setVolume(int sound, int music, int ui)
 	{
 		if (sound >= 0)
 		{
+			sound = volumeExponent(sound) * (double)SDL_MIX_MAXVOLUME;
 			Mix_Volume(-1, sound);
 		}
 		if (music >= 0)
 		{
+			music = volumeExponent(music) * (double)SDL_MIX_MAXVOLUME;
 			Mix_VolumeMusic(music);
-			func_set_music_volume(music);
 		}
 		if (ui >= 0)
 		{
-			Mix_Volume(0, ui);
+			ui = volumeExponent(ui) * (double)SDL_MIX_MAXVOLUME;
 			Mix_Volume(1, ui);
+			Mix_Volume(2, ui);
 		}
 	}
 }
 
+double Game::volumeExponent(int volume)
+{
+	return (exp(log(Game::VOLUME_GRADIENT + 1.0) * volume / (double)SDL_MIX_MAXVOLUME) -1.0 ) / Game::VOLUME_GRADIENT;
+}
 /**
  * Returns the display screen used by the game.
  * @return Pointer to the screen.
@@ -613,8 +597,9 @@ void Game::setMouseActive(bool active)
 }
 
 /**
- * @brief Returns whether current state is *state
+ * Returns whether current state is *state
  * @param state The state to test against the stack state
+ * @return Is state the current state?
  */
 bool Game::isState(State *state) const
 {
@@ -622,6 +607,7 @@ bool Game::isState(State *state) const
 }
 
 /**
+ * Checks if the game is currently quitting.
  * @return whether the game is shutting down or not.
  */
 bool Game::isQuitting() const
@@ -695,8 +681,8 @@ void Game::initAudio()
 	{
 		Mix_AllocateChannels(16);
 		// Set up UI channels
-		Mix_ReserveChannels(2);
-		Mix_GroupChannels(0, 1, 0);
+		Mix_ReserveChannels(3);
+		Mix_GroupChannels(1, 2, 0);
 		Log(LOG_INFO) << "SDL_mixer initialized successfully.";
 		setVolume(Options::soundVolume, Options::musicVolume, Options::uiVolume);
 	}

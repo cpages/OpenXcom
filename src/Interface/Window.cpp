@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -19,10 +19,9 @@
 #include "Window.h"
 #include <SDL.h>
 #include <SDL_mixer.h>
-#include "../aresame.h"
+#include "../fmath.h"
 #include "../Engine/Timer.h"
 #include "../Engine/Sound.h"
-#include "../Engine/RNG.h"
 
 namespace OpenXcom
 {
@@ -131,7 +130,7 @@ void Window::popup()
 {
 	if (AreSame(_popupStep, 0.0))
 	{
-		int sound = RNG::generate(0, 2);
+		int sound = SDL_GetTicks() % 3; // this is a hack to avoid calling  RNG::generate(0, 2) and skewing our seed.
 		if (soundPopup[sound] != 0)
 		{
 			soundPopup[sound]->play(Mix_GroupAvailable(0));

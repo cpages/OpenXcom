@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -19,7 +19,7 @@
 #include "Ruleset.h"
 #include <fstream>
 #include <algorithm>
-#include "../aresame.h"
+#include "../fmath.h"
 #include "../Engine/Options.h"
 #include "../Engine/Exception.h"
 #include "../Engine/CrossPlatform.h"
@@ -512,9 +512,11 @@ void Ruleset::loadFiles(const std::string &dirname)
 
 /**
  * Loads a rule element, adding/removing from vectors as necessary.
+ * @param node YAML node.
  * @param map Map associated to the rule type.
- * @param vector Index vector for the rule type.
+ * @param index Index vector for the rule type.
  * @param key Rule key name.
+ * @return Pointer to new rule if one was created, or NULL if one was removed.
  */
 template <typename T>
 T *Ruleset::loadRule(const YAML::Node &node, std::map<std::string, T*> *map, std::vector<std::string> *index, const std::string &key)
@@ -555,7 +557,6 @@ T *Ruleset::loadRule(const YAML::Node &node, std::map<std::string, T*> *map, std
 			}
 		}
 	}
-
 	return rule;
 }
 
@@ -1085,6 +1086,8 @@ const std::vector<std::string> &Ruleset::getAlienMissionList() const
 	return _alienMissionsIndex;
 }
 
+#define CITY_EPSILON 0.00000000000001 // compensate for slight coordinate change
+
 /**
  * @brief Match a city based on coordinates.
  * This function object compares a city's coordinates with the stored coordinates.
@@ -1095,7 +1098,9 @@ public:
 	/// Remembers the coordinates.
 	EqualCoordinates(double lon, double lat) : _lon(lon), _lat(lat) { /* Empty by design */ }
 	/// Compares with stored coordinates.
-	bool operator()(const City *city) const { return AreSame(city->getLongitude(), _lon) && AreSame(city->getLatitude(), _lat); }
+	//bool operator()(const City *city) const { return AreSame(city->getLongitude(), _lon) && AreSame(city->getLatitude(), _lat); }
+	bool operator()(const City *city) const { return (fabs(city->getLongitude() - _lon) < CITY_EPSILON) &&
+	                                                 (fabs(city->getLatitude() - _lat) < CITY_EPSILON); }
 private:
 	double _lon, _lat;
 };
@@ -1320,6 +1325,7 @@ std::vector<std::string> Ruleset::getPsiRequirements() const
 /**
  * Creates a new randomly-generated soldier.
  * @param save Saved game the soldier belongs to.
+ * @return Newly generated soldier.
  */
 Soldier *Ruleset::genSoldier(SavedGame *save) const
 {
@@ -1352,6 +1358,9 @@ Soldier *Ruleset::genSoldier(SavedGame *save) const
 			}
 		}
 	}
+
+	// calculate new statString
+	soldier->calcStatString(getStatStrings(), (Options::psiStrengthEval && save->isResearched(getPsiRequirements())));
 
 	return soldier;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -37,6 +37,7 @@ private:
 	bool _pressed, _contrast;
 	Surface *_track, *_thumb;
 	SDL_Rect _thumbRect;
+	int _offset;
 	Surface *_bg;
 	/// Draws the scrollbar track.
 	void drawTrack();

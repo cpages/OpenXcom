@@ -39,7 +39,7 @@ grt,
 #include "Screen.h"
 #include "Surface.h"
 #include "Options.h"
-#include "../aresame.h"
+#include "../fmath.h"
 #include "Surface.h"
 
 namespace OpenXcom
@@ -463,7 +463,7 @@ static double oldTick=0.0;
 		waitTicks = (oldTick + delay - SDL_GetTicks());
 
 		if(waitTicks > 0.0) {
-			//SDL_Delay(floor(waitTicks + 0.5)); // biased rounding? mehhh?
+			//SDL_Delay((int)Round(waitTicks)); // biased rounding? mehhh?
 			SDL_Delay(1);
 		}
 	} while (waitTicks > 0.0); 
@@ -559,10 +559,17 @@ void FlcMain(void (*frameCallBack)())
 			case SDL_VIDEORESIZE:
 				if (Options::allowResize)
 				{
-					Options::displayWidth = event.resize.w;
-					Options::displayHeight = event.resize.h;
-					flc.realscreen->resetDisplay();
-					flc.mainscreen = flc.realscreen->getSurface()->getSurface();
+					Options::newDisplayWidth = Options::displayWidth = std::max(Screen::ORIGINAL_WIDTH, event.resize.w);
+					Options::newDisplayHeight = Options::displayHeight = std::max(Screen::ORIGINAL_HEIGHT, event.resize.h);
+					if (flc.mainscreen != flc.realscreen->getSurface()->getSurface())
+					{
+						flc.realscreen->resetDisplay();
+					}
+					else
+					{
+						flc.realscreen->resetDisplay();
+						flc.mainscreen = flc.realscreen->getSurface()->getSurface();
+					}
 				}
 				break;
 #endif

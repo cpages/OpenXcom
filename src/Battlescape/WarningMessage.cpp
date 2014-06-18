@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -140,14 +140,7 @@ void WarningMessage::fade()
 void WarningMessage::draw()
 {
 	Surface::draw();
-
-	SDL_Rect square1;
-	square1.x = 0;
-	square1.y = 0;
-	square1.w = getWidth();
-	square1.h = getHeight();
-	drawRect(&square1, _color + (_fade > 12 ? 12 : _fade));
-
+	drawRect(0, 0, getWidth(), getHeight(), _color + (_fade > 12 ? 12 : _fade));
 	_text->blit(this);
 }
 

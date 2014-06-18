@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -20,7 +20,7 @@
 #include <cmath>
 #include "Projectile.h"
 #include "TileEngine.h"
-#include "../aresame.h"
+#include "../fmath.h"
 #include "../Engine/SurfaceSet.h"
 #include "../Engine/Surface.h"
 #include "../Resource/ResourcePack.h"
@@ -47,8 +47,9 @@ namespace OpenXcom
  * @param save Pointer to battlesavegame.
  * @param action An action.
  * @param origin Position the projectile originates from.
+ * @param targetVoxel Position the projectile is targeting.
  */
-Projectile::Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction action, Position origin, Position targetVoxel) : _res(res), _save(save), _action(action), _origin(origin), _targetVoxel(targetVoxel), _position(0)
+Projectile::Projectile(ResourcePack *res, SavedBattleGame *save, BattleAction action, Position origin, Position targetVoxel, int bulletSprite) : _res(res), _save(save), _action(action), _origin(origin), _targetVoxel(targetVoxel), _position(0), _bulletSprite(bulletSprite)
 {
 	// this is the number of pixels the sprite will move between frames
 	_speed = Options::battleFireSpeed;
@@ -362,10 +363,10 @@ Position Projectile::getPosition(int offset) const
  */
 int Projectile::getParticle(int i) const
 {
-	if (_action.weapon->getRules()->getBulletSprite() == -1)
-		return -1;
+	if (_bulletSprite != -1)
+		return _bulletSprite + i;
 	else
-		return _action.weapon->getRules()->getBulletSprite() + i;
+		return -1;
 }
 
 /**

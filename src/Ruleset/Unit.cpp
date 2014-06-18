@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2013 OpenXcom Developers.
+ * Copyright 2010-2014 OpenXcom Developers.
  *
  * This file is part of OpenXcom.
  *
@@ -24,8 +24,6 @@ namespace OpenXcom
 /**
  * Creates a certain type of unit.
  * @param type String defining the type.
- * @param race String defining the race.
- * @param rank String defining the rank.
  */
 Unit::Unit(const std::string &type) : _type(type), _race(""), _rank(""), _armor(""), _standHeight(0), _kneelHeight(0), _floatHeight(0),
 																		_value(0), _deathSound(0), _aggroSound(-1), _moveSound(-1), _intelligence(0), _aggression(0), _energyRecovery(30), _specab(SPECAB_NONE),
@@ -43,6 +41,7 @@ Unit::~Unit()
 
 /**
  * Loads the unit from a YAML file.
+ * @param modIndex A value that offsets the sounds and sprite values to avoid conflicts.
  * @param node YAML node.
  */
 void Unit::load(const YAML::Node &node, int modIndex)
@@ -50,7 +49,7 @@ void Unit::load(const YAML::Node &node, int modIndex)
 	_type = node["type"].as<std::string>(_type);
 	_race = node["race"].as<std::string>(_race);
 	_rank = node["rank"].as<std::string>(_rank);
-	_stats = node["stats"].as<UnitStats>(_stats);
+	_stats.merge(node["stats"].as<UnitStats>(_stats));
 	_armor = node["armor"].as<std::string>(_armor);
 	_standHeight = node["standHeight"].as<int>(_standHeight);
 	_kneelHeight = node["kneelHeight"].as<int>(_kneelHeight);
